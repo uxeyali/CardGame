@@ -35,7 +35,7 @@ public class CardGame {
 		} else if(p1score < p2score) {
 			if(p2score > p3score) {
 				System.out.println("Player 2 is the winner!");
-			} else if(p2score <p3score) {
+			} else if(p2score < p3score) {
 				System.out.println("Player 3 is the winner!");
 			}
 		}
@@ -91,7 +91,7 @@ public class CardGame {
 					p2.score++;
 				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
 					maxValue=thrdCard.value;
-					currentPlayer=p3;
+					currentPlayer = p3;
 					p3.score++;
 				} else {
 					p1.score++;
@@ -110,25 +110,25 @@ public class CardGame {
 				leadingCard = fstCard;
 				maxValue = fstCard.value;
 				System.out.println("CurrentPlayer is p2");
-				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-				System.out.println("p2's Card "+fstCard.suit+fstCard.value );
-				System.out.println("p3's Card "+sndCard.suit+sndCard.value );
-				System.out.println("p1's Card "+thrdCard.suit+thrdCard.value );
+				System.out.println("Leading "+ leadingCard.suit + leadingCard.value );
+				System.out.println("p2's Card "+ fstCard.suit + fstCard.value );
+				System.out.println("p3's Card "+ sndCard.suit + sndCard.value );
+				System.out.println("p1's Card "+ thrdCard.suit + thrdCard.value );
 				
 				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
 					maxValue=sndCard.value;
 					currentPlayer = p3;
 					p3.score++;
 				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
+					System.out.println("Max Value is: " + maxValue +"  "+ thrdCard.value);
 					maxValue=thrdCard.value;
-					currentPlayer=p1;
+					currentPlayer = p1;
 					p1.score++;
 				} else {
 					p2.score++;
 				}
 
-				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+				System.out.println(p1.score +" " +p2.score +" "+ p3.score);
 				
 			} else {
 
@@ -140,10 +140,10 @@ public class CardGame {
 				maxValue = fstCard.value;
 
 				System.out.println("CurrentPlayer is p3");
-				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-				System.out.println("p3's Card "+fstCard.suit+fstCard.value );
-				System.out.println("p1's Card "+sndCard.suit+sndCard.value );
-				System.out.println("p2's Card "+thrdCard.suit+thrdCard.value );
+				System.out.println("Leading " + leadingCard.suit + leadingCard.value );
+				System.out.println("p3's Card " + fstCard.suit + fstCard.value );
+				System.out.println("p1's Card " + sndCard.suit + sndCard.value );
+				System.out.println("p2's Card " + thrdCard.suit + thrdCard.value );
 				
 				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
 					maxValue=sndCard.value;
