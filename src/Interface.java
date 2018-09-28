@@ -24,7 +24,7 @@ public class Interface {
 		Online.setText("Online Game");
 		
 		Local.addListener(SWT.Selection, e -> Player1());
-		Player p1Player = new Player();
+		Player p1Player = new Player("Player1");
 		//p1Player.hand.get(1).suit;
 		//p1Player.hand.get(1).value;
 		Start.setSize(1640, 800);
