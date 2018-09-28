@@ -69,7 +69,7 @@ public class CardGame {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public void startLocalGame() {
 		// TODO Auto-generated method stub
 		GameState gameState = new GameState();
 		int round = 1;
