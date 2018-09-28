@@ -9,14 +9,14 @@ public class Deck {
 	}
 	
 	public NPSOrderedArrayList<Card> create() {
-			for (int i=0;i<=51;i++) {
-				if(i>=0 && i<=12) {
+			for (int i=1;i<=52;i++) {
+				if(i>=1 && i<=13) {
 					deck.add(new Card("c", i+1));
-				} else if(i>12 && i<=25) {
+				} else if(i>13 && i<=26) {
 					deck.add(new Card("d", i-12));
-				}else if(i>25 && i<=38) {
+				}else if(i>26 && i<=39) {
 					deck.add(new Card("h", i-25));
-				}else if(i>38 && i<=51) {
+				}else if(i>39 && i<=52) {
 					deck.add(new Card("s", i-38));
 			}
 
