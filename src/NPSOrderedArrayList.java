@@ -1,4 +1,6 @@
-public class NPSOrderedArrayList <E> {
+import java.io.Serializable;
+
+public class NPSOrderedArrayList <E> implements Serializable{
 
 	    
 	    public static final int DEFAULT_SIZE = 25; 

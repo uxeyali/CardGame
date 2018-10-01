@@ -1,4 +1,4 @@
-public class CardGame {
+public class CardGame extends Thread{
 
 	
 	public static void distribute(Player p1, Player p2, Player p3, NPSOrderedArrayList<Card> deck) {
