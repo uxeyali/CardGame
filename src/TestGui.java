@@ -1,6 +1,7 @@
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,10 +22,13 @@ public class TestGui extends JFrame{
 	static int PlayerNo = 0;
 	private JTextField textFieldName;
 	private JTextField textFieldNameServer;
+	JTextField textFieldPort;
 	JButton btnConnect;
+	JButton btnPlay;
 	String playerName;
 	InetAddress serverIP;
 	JTextField enterTxt;
+	Player p;
 	
 	public TestGui() {
 		this.gotoMain();
@@ -75,6 +79,28 @@ public class TestGui extends JFrame{
 		testPanel.add(scrollPane);
 		textAreaJoin = new JTextArea();
 		scrollPane.setViewportView(textAreaJoin);
+		//adds button
+		btnPlay = new JButton("Play Card");
+		btnPlay.setBounds(50, 70, 100, 23);
+		btnPlay.setEnabled(false);
+		testPanel.add(btnPlay);
+		//plays first card
+		btnPlay.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				display("You played: " + p.hand.get(0).suit + p.hand.get(0).value);
+				try {
+					p.sendToServer(p.hand.get(0));
+				} catch (IndexOutOfBoundsException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				//removes card from hand
+				p.play(0);
+			}
+		});
 	}
 	
 	void gotoCreateServer() {
@@ -145,6 +171,14 @@ public class TestGui extends JFrame{
 		lblName.setBounds(0, 55, 46, 14);
 		joinPanel.add(lblName);
 		
+		textFieldPort = new JTextField("50001");
+		textFieldPort.setBounds(100, 70, 100, 23);
+		joinPanel.add(textFieldPort);
+		textFieldPort.setColumns(10);
+		JLabel lblPort = new JLabel("Port Number:");
+		lblPort.setBounds(100, 55, 90, 14);
+		joinPanel.add(lblPort);
+		
 		JLabel enterLbl = new JLabel("Enter Server IP Address:");
 		enterLbl.setBounds(0, 5, 200, 23);
 		joinPanel.add(enterLbl);
@@ -156,6 +190,7 @@ public class TestGui extends JFrame{
 		}
 		enterTxt.setBounds(0, 30, 100, 23);
 		joinPanel.add(enterTxt);
+		
 		btnConnect = new JButton("Connect");
 		btnConnect.setBounds(102, 30, 85, 23);
 		joinPanel.add(btnConnect);
@@ -193,8 +228,9 @@ public class TestGui extends JFrame{
 		//makeServer();
 		playerName = textFieldNameServer.getText();
 		try {
-			Player p = new Player(playerName, this, InetAddress.getLocalHost());
-			p.connect();
+			//player1 is port 5000
+			p = new Player(playerName, this, InetAddress.getLocalHost(), 5000);
+			p.start();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -210,8 +246,8 @@ public class TestGui extends JFrame{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Player p = new Player(playerName, this, serverIP);
-		p.connect();
+		p = new Player(playerName, this, serverIP, Integer.parseInt(textFieldPort.getText()));
+		p.start();
 	}
 	
 	
