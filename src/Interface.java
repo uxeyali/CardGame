@@ -76,16 +76,19 @@ public class Interface {
 		card5.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		card6.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		card7.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-
+		//card1.setVisible(false);
+		card1.setEnabled(false);
 		Player1.setSize(1100, 900);
 		//This how to add a pic
 		Image pic = new Image(player, Interface.class.getResourceAsStream("PNG/2C.png"));
+		//card.suit+card.value+".png"
 		final int width = pic.getBounds().width;
 		final int height = pic.getBounds().height;
 		final Image scaled050 = new Image(player,
 		        pic.getImageData().scaledTo((int)(width*0.2),(int)(height*0.2)));
 		//button.addListener(SWT.MouseHover, e-> System.out.println("wow"));
 		//button.setImage(scaled050);
+		card1.setImage(scaled050);
 		
 		Player1.open();
 		while (!Player1.isDisposed()) {
