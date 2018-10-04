@@ -73,14 +73,14 @@ public class CardGame extends Thread{
 		// TODO Auto-generated method stub
 		GameState gameState = new GameState();
 		int round = 1;
-		Interface I1 = new Interface();
-		Interface I2 = new Interface();
-		Interface I3 = new Interface();
+		GameGui G1 = new GameGui();
+		GameGui G2 = new GameGui();
+		GameGui G3 = new GameGui();
 //==========Initialize players====================================
-		Player p1 = new Player("Player 1", I1 );
-		Player p2 = new Player("Player 2", I2);
-		Player p3 = new Player("Player 3", I3);
-		p1.View.Player1();
+		Player p1 = new Player("Player 1", G1);
+		Player p2 = new Player("Player 2", G2);
+		Player p3 = new Player("Player 3", G3);
+	
 		
 		Player currentPlayer = p1;
 		

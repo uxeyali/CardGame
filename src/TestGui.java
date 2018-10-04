@@ -69,6 +69,10 @@ public class TestGui extends JFrame{
 			public void actionPerformed(ActionEvent arg0) {
 				
 				CardGame CG = new CardGame();
+				CG.startLocalGame();
+				GameGui GG = new GameGui();
+				Player h = new Player();
+				GG.CreateButton(h.hand);
 				
 			}
 		});

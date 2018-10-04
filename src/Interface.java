@@ -52,8 +52,10 @@ public class Interface {
 		 * Cards being played
 		 * Cards to choose
 		 */
-		Display player = new Display();
-		Shell Player1 = new Shell(player);
+		
+		Display playe1r = new Display();
+		for (int i = 0; i < 3; i++ ) {
+		Shell Player1 = new Shell(playe1r);
 		Label score = new Label(Player1, SWT.BORDER);
 		Label turn = new Label(Player1, SWT.BORDER);
 		Label center = new Label(Player1, SWT.BORDER);
@@ -84,22 +86,25 @@ public class Interface {
 		card1.setEnabled(false);
 		Player1.setSize(1100, 900);
 		//This how to add a pic
-		Image pic = new Image(player, Interface.class.getResourceAsStream("PNG/2C.png"));
+		Image pic = new Image(playe1r, Interface.class.getResourceAsStream("PNG/2C.png"));
 		//card.suit+card.value+".png"
 		final int width = pic.getBounds().width;
 		final int height = pic.getBounds().height;
-		final Image scaled050 = new Image(player,
+		final Image scaled050 = new Image(playe1r,
 		        pic.getImageData().scaledTo((int)(width*0.2),(int)(height*0.2)));
 		//button.addListener(SWT.MouseHover, e-> System.out.println("wow"));
 		//button.setImage(scaled050);
 		card1.setImage(scaled050);
 		
 		Player1.open();
-		while (!Player1.isDisposed()) {
-			if (!player.readAndDispatch()) player.sleep();
-		}
-		player.dispose();
+		Interface IN = new Interface();
 		
+		while (!Player1.isDisposed()) {
+			if (!playe1r.readAndDispatch()) playe1r.sleep();
+		}
+		playe1r.dispose();
+		
+		}
 		
 	}
 	public void Player2() {
@@ -113,23 +118,23 @@ public class Interface {
 		 * Cards being played
 		 * Cards to choose
 		 */
-		Display player = new Display();
-		Shell Player1 = new Shell(player);
-		Label score = new Label(Player1, SWT.BORDER);
-		Label turn = new Label(Player1, SWT.BORDER);
-		Label center = new Label(Player1, SWT.BORDER);
+		Display playe2r = new Display();
+		Shell Player2 = new Shell(playe2r);
+		Label score = new Label(Player2, SWT.BORDER);
+		Label turn = new Label(Player2, SWT.BORDER);
+		Label center = new Label(Player2, SWT.BORDER);
 		//Button button = new Button(Player1, SWT.PUSH);
-		Button card1 = new Button(Player1, SWT.PUSH);
-		Button card2 = new Button(Player1, SWT.PUSH);
-		Button card3 = new Button(Player1, SWT.PUSH);
-		Button card4 = new Button(Player1, SWT.PUSH);
-		Button card5 = new Button(Player1, SWT.PUSH);
-		Button card6 = new Button(Player1, SWT.PUSH);
-		Button card7 = new Button(Player1, SWT.PUSH);
+		Button card1 = new Button(Player2, SWT.PUSH);
+		Button card2 = new Button(Player2, SWT.PUSH);
+		Button card3 = new Button(Player2, SWT.PUSH);
+		Button card4 = new Button(Player2, SWT.PUSH);
+		Button card5 = new Button(Player2, SWT.PUSH);
+		Button card6 = new Button(Player2, SWT.PUSH);
+		Button card7 = new Button(Player2, SWT.PUSH);
 		GridLayout cards = new GridLayout(7,true);
 		score.setText("Your Score:");
 		score.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 1));
-		Player1.setLayout(cards);
+		Player2.setLayout(cards);
 		//button.setText("current");
 		turn.setText("Who's Turn");
 		center.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 7, 4));
@@ -143,23 +148,23 @@ public class Interface {
 		card7.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		//card1.setVisible(false);
 		card1.setEnabled(false);
-		Player1.setSize(1100, 900);
+		Player2.setSize(1100, 900);
 		//This how to add a pic
-		Image pic = new Image(player, Interface.class.getResourceAsStream("PNG/2C.png"));
+		Image pic = new Image(playe2r, Interface.class.getResourceAsStream("PNG/2C.png"));
 		//card.suit+card.value+".png"
 		final int width = pic.getBounds().width;
 		final int height = pic.getBounds().height;
-		final Image scaled050 = new Image(player,
+		final Image scaled050 = new Image(playe2r,
 		        pic.getImageData().scaledTo((int)(width*0.2),(int)(height*0.2)));
 		//button.addListener(SWT.MouseHover, e-> System.out.println("wow"));
 		//button.setImage(scaled050);
 		card1.setImage(scaled050);
 		
-		Player1.open();
-		while (!Player1.isDisposed()) {
-			if (!player.readAndDispatch()) player.sleep();
+		Player2.open();
+		while (!Player2.isDisposed()) {
+			if (!playe2r.readAndDispatch()) playe2r.sleep();
 		}
-		player.dispose();
+		playe2r.dispose();
 		
 		
 	}
@@ -174,23 +179,23 @@ public class Interface {
 		 * Cards being played
 		 * Cards to choose
 		 */
-		Display player = new Display();
-		Shell Player1 = new Shell(player);
-		Label score = new Label(Player1, SWT.BORDER);
-		Label turn = new Label(Player1, SWT.BORDER);
-		Label center = new Label(Player1, SWT.BORDER);
+		Display playe3r = new Display();
+		Shell Player3 = new Shell(playe3r);
+		Label score = new Label(Player3, SWT.BORDER);
+		Label turn = new Label(Player3, SWT.BORDER);
+		Label center = new Label(Player3, SWT.BORDER);
 		//Button button = new Button(Player1, SWT.PUSH);
-		Button card1 = new Button(Player1, SWT.PUSH);
-		Button card2 = new Button(Player1, SWT.PUSH);
-		Button card3 = new Button(Player1, SWT.PUSH);
-		Button card4 = new Button(Player1, SWT.PUSH);
-		Button card5 = new Button(Player1, SWT.PUSH);
-		Button card6 = new Button(Player1, SWT.PUSH);
-		Button card7 = new Button(Player1, SWT.PUSH);
+		Button card1 = new Button(Player3, SWT.PUSH);
+		Button card2 = new Button(Player3, SWT.PUSH);
+		Button card3 = new Button(Player3, SWT.PUSH);
+		Button card4 = new Button(Player3, SWT.PUSH);
+		Button card5 = new Button(Player3, SWT.PUSH);
+		Button card6 = new Button(Player3, SWT.PUSH);
+		Button card7 = new Button(Player3, SWT.PUSH);
 		GridLayout cards = new GridLayout(7,true);
 		score.setText("Your Score:");
 		score.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, true, 1, 1));
-		Player1.setLayout(cards);
+		Player3.setLayout(cards);
 		//button.setText("current");
 		turn.setText("Who's Turn");
 		center.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 7, 4));
@@ -204,29 +209,32 @@ public class Interface {
 		card7.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 		//card1.setVisible(false);
 		card1.setEnabled(false);
-		Player1.setSize(1100, 900);
+		Player3.setSize(1100, 900);
 		//This how to add a pic
-		Image pic = new Image(player, Interface.class.getResourceAsStream("PNG/2C.png"));
+		Image pic = new Image(playe3r, Interface.class.getResourceAsStream("PNG/2C.png"));
 		//card.suit+card.value+".png"
 		final int width = pic.getBounds().width;
 		final int height = pic.getBounds().height;
-		final Image scaled050 = new Image(player,
+		final Image scaled050 = new Image(playe3r,
 		        pic.getImageData().scaledTo((int)(width*0.2),(int)(height*0.2)));
 		//button.addListener(SWT.MouseHover, e-> System.out.println("wow"));
 		//button.setImage(scaled050);
 		card1.setImage(scaled050);
 		
-		Player1.open();
-		while (!Player1.isDisposed()) {
-			if (!player.readAndDispatch()) player.sleep();
+		Player3.open();
+		while (!Player3.isDisposed()) {
+			if (!playe3r.readAndDispatch()) playe3r.sleep();
 		}
-		player.dispose();
+		playe3r.dispose();
 		
 		
 	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		Welcome();
+		Interface IN = new Interface();
+		IN.Player1();
+		IN.Player2();
+		IN.Player3();
 		
 	}
 }
