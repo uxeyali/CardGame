@@ -74,10 +74,6 @@ public class TestGui extends JFrame{
 		});
 		btnLocalGame.setBounds(38, 10, 126, 23);
 		panel.add(btnLocalGame);
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBounds(0, 0, 10, 301);
-		Main.getContentPane().add(panel_1);
 	}
 	
 	void gotoTestWindow() {
