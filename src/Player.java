@@ -15,14 +15,14 @@ public class Player extends Thread{
 	String name;
 	int score;
 	int sum;
-	Interface View;
+	GameGui View;
 	//constructor
 	public Player() {
 		this.hand = new NPSOrderedArrayList<Card>();
 		this.score = 0;
 		this.sum = 0;
 	}
-	public Player(String name, Interface i) {
+	public Player(String name, GameGui i) {
 		this.name = name;
 		this.hand = new NPSOrderedArrayList<Card>();
 		this.score = 0;

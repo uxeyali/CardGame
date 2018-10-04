@@ -6,6 +6,7 @@ import javax.swing.JTextArea;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,6 +17,7 @@ import javax.swing.JTextField;
 import org.eclipse.swt.graphics.Image;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 public class GameGui extends JFrame {
 	JPanel panel = new JPanel();
@@ -25,17 +27,20 @@ public class GameGui extends JFrame {
 	NPSOrderedArrayList<JButton> buttons = new NPSOrderedArrayList<JButton>();
 	
 	public GameGui() {
+		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		getContentPane().add(panelN, BorderLayout.NORTH);	
-		getContentPane().add(panelS, BorderLayout.SOUTH);
-		getContentPane().add(panelC, BorderLayout.CENTER);
+		getContentPane().add(panelS, BorderLayout.CENTER);
+		getContentPane().add(panelC, BorderLayout.SOUTH);
 				JTextArea textArea = new JTextArea();
-				panelN.add(textArea);
+				panelS.add(textArea);
 		setVisible(true);
+	
 		
 		
 		
 	}
-	JFrame Card = new JFrame();
+	
+
 	private JTextField textField;
 	public void CreateButton( NPSOrderedArrayList<Card> hand) {
 		
@@ -47,6 +52,14 @@ public class GameGui extends JFrame {
 			panelS.add(button);
 			System.out.println("wow");
 			buttons.add(button);
+			button.setSize(90, 138);
+			button.setMinimumSize(getSize());
+		
+			button.setBorderPainted(false);
+			button.setContentAreaFilled(false);
+			button.setFocusPainted(false);
+			button.setOpaque(false);
+			panelS.revalidate();
 			Card myCard = hand.get(i);
 			button.addActionListener(new ActionListener() {
 			
@@ -83,6 +96,21 @@ public class GameGui extends JFrame {
 		hand.add(new Card("H", 2));
 		hand.add(new Card("D", 5));
 		hand.add(new Card("S", 12));
+		hand.add(new Card("H", 2));
+		hand.add(new Card("D", 5));
+		hand.add(new Card("S", 12));
+		hand.add(new Card("H", 2));
+		hand.add(new Card("D", 5));
+		hand.add(new Card("S", 12));
+		hand.add(new Card("H", 2));
+		hand.add(new Card("D", 5));
+		hand.add(new Card("S", 12));
+		hand.add(new Card("H", 2));
+		hand.add(new Card("D", 5));
+		hand.add(new Card("S", 12));
+		hand.add(new Card("H", 2));
+		hand.add(new Card("D", 5));
+
 		
 		GG.CreateButton(hand);
 		
