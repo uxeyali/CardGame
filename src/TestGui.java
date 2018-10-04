@@ -15,7 +15,7 @@ public class TestGui extends JFrame{
 	JPanel ServerPanel = new JPanel();
 	JPanel joinPanel = new JPanel();
 	JPanel testPanel = new JPanel();
-	
+	JPanel GamePanel = new JPanel();
 	//client
 	JTextArea textAreaJoin;
 	TestGui joinView = this;
@@ -40,12 +40,12 @@ public class TestGui extends JFrame{
 		Main.setVisible(true);
 		
 		panel.setSize(new Dimension(170, 240));
-		panel.setBounds(10, 11, 307, 249);
+		panel.setBounds(20, 10, 307, 249);
 		Main.getContentPane().add(panel);
 		panel.setLayout(null);
 		
 		JButton btnCreateServer = new JButton("Create Server");
-		btnCreateServer.setBounds(38, 5, 126, 23);
+		btnCreateServer.setBounds(38, 123, 126, 23);
 		panel.add(btnCreateServer);
 		btnCreateServer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -54,13 +54,28 @@ public class TestGui extends JFrame{
 		});
 		
 		JButton btnJoinServer = new JButton("Join Server");
-		btnJoinServer.setBounds(38, 42, 126, 23);
+		btnJoinServer.setBounds(38, 58, 126, 23);
 		btnJoinServer.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				gotoJoin();
 			}
 		});
 		panel.add(btnJoinServer);
+		
+		JButton btnLocalGame = new JButton("Local Game");
+		btnLocalGame.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				CardGame CG = new CardGame();
+				
+			}
+		});
+		btnLocalGame.setBounds(38, 10, 126, 23);
+		panel.add(btnLocalGame);
+		
+		JPanel panel_1 = new JPanel();
+		panel_1.setBounds(0, 0, 10, 301);
+		Main.getContentPane().add(panel_1);
 	}
 	
 	void gotoTestWindow() {
@@ -249,6 +264,4 @@ public class TestGui extends JFrame{
 		p = new Player(playerName, this, serverIP, Integer.parseInt(textFieldPort.getText()));
 		p.start();
 	}
-	
-	
 }

@@ -73,11 +73,15 @@ public class CardGame extends Thread{
 		// TODO Auto-generated method stub
 		GameState gameState = new GameState();
 		int round = 1;
-
+		Interface I1 = new Interface();
+		Interface I2 = new Interface();
+		Interface I3 = new Interface();
 //==========Initialize players====================================
-		Player p1 = new Player("Player 1");
-		Player p2 = new Player("Player 2");
-		Player p3 = new Player("Player 3");
+		Player p1 = new Player("Player 1", I1 );
+		Player p2 = new Player("Player 2", I2);
+		Player p3 = new Player("Player 3", I3);
+		p1.View.Player1();
+		
 		Player currentPlayer = p1;
 		
 //==========Create a new deck=====================================
@@ -99,7 +103,8 @@ public class CardGame extends Thread{
 			
 			System.out.println("Round " + round + ": ");
 			if(currentPlayer == p1) {
-
+				
+				//p1.gui.display(p1.name + "'s turn");
 				fstCard = p1.play(0);
 				sndCard = p2.play(0);
 				thrdCard = p3.play(0);

@@ -13,12 +13,19 @@ public class Player extends Thread{
 	String name;
 	int score;
 	int sum;
-	
+	Interface View;
 	//constructor
 	public Player() {
 		this.hand = new NPSOrderedArrayList<Card>();
 		this.score = 0;
 		this.sum = 0;
+	}
+	public Player(String name, Interface i) {
+		this.name = name;
+		this.hand = new NPSOrderedArrayList<Card>();
+		this.score = 0;
+		this.sum = 0;
+		View = i;
 	}
 	
 	public Player(String name) {
