@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 
 /* *****************This Class only exists to test the Networking***************** */
 public class TestGui extends JFrame{
@@ -98,10 +99,14 @@ public class TestGui extends JFrame{
 		Main.getContentPane().add(testPanel);
 		testPanel.setLayout(null);
 		//adds textArea
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(0, 99, 180, 139);
-		testPanel.add(scrollPane);
+		
+		
 		textAreaJoin = new JTextArea();
+		JScrollPane scrollPane = new JScrollPane();
+		DefaultCaret caret = (DefaultCaret) textAreaJoin.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		testPanel.add(scrollPane);
+		scrollPane.setBounds(0, 99, 180, 139);
 		scrollPane.setViewportView(textAreaJoin);
 		//adds textAreaScores
 		textAreaScores = new JTextArea();
