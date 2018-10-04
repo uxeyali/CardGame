@@ -13,7 +13,6 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JTextField;
 
-import org.eclipse.swt.graphics.Image;
 
 import javax.swing.JPanel;
 
