@@ -29,6 +29,7 @@ public class TestGui extends JFrame{
 	InetAddress serverIP;
 	JTextField enterTxt;
 	Player p;
+	JTextArea textAreaScores;
 	
 	public TestGui() {
 		this.gotoMain();
@@ -69,6 +70,10 @@ public class TestGui extends JFrame{
 		joinPanel.setVisible(false);
 		panel.setVisible(false);
 		//builds test window
+//		JFrame test = new JFrame();
+//		test.setSize(new Dimension(230, 310));
+//		test.getContentPane().setLayout(null);
+//		test.setVisible(true);
 		testPanel.setSize(new Dimension(170, 240));
 		testPanel.setBounds(10, 11, 307, 249);
 		Main.getContentPane().add(testPanel);
@@ -79,6 +84,10 @@ public class TestGui extends JFrame{
 		testPanel.add(scrollPane);
 		textAreaJoin = new JTextArea();
 		scrollPane.setViewportView(textAreaJoin);
+		//adds textAreaScores
+		textAreaScores = new JTextArea();
+		textAreaScores.setBounds(0, 0, 80, 50);
+		testPanel.add(textAreaScores);
 		//adds button
 		btnPlay = new JButton("Play Card");
 		btnPlay.setBounds(50, 70, 100, 23);
@@ -90,6 +99,7 @@ public class TestGui extends JFrame{
 				display("You played: " + p.hand.get(0).suit + p.hand.get(0).value);
 				try {
 					p.sendToServer(p.hand.get(0));
+					btnPlay.setEnabled(false);
 				} catch (IndexOutOfBoundsException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -212,6 +222,10 @@ public class TestGui extends JFrame{
 	
 	void display(String message) {
 		textAreaJoin.append(message + "\n");
+	}
+	
+	void displayScores(String messgae) {
+		textAreaScores.setText(messgae);
 	}
 	
 	

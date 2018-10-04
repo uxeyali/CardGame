@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 
 public class CardGameServer extends CardGame{
@@ -20,10 +21,11 @@ public class CardGameServer extends CardGame{
 	int IPcount = 0;
 	int ports[] = new int[3];
 	int portCount = 0;
+	DatagramSocket receiveSocket; //needs to be global so it can close
 	
 	public void listenAndAddClient() throws IOException{
 		byte[] buffer = new byte[1024];
-		DatagramSocket receiveSocket = new DatagramSocket(receivePort);
+		receiveSocket = new DatagramSocket(receivePort);
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -48,9 +50,10 @@ public class CardGameServer extends CardGame{
 		receiveSocket.close();
 	}
 	
-	public void listenForAck() throws IOException{
+	public void listenForAck() throws IOException, SocketTimeoutException{
 		byte[] buffer = new byte[1024];
-		DatagramSocket receiveSocket = new DatagramSocket(receivePort);
+		receiveSocket = new DatagramSocket(receivePort);
+		receiveSocket.setSoTimeout(3000);
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -68,17 +71,18 @@ public class CardGameServer extends CardGame{
 		receiveSocket.close();
 	}
 	
-	public void listenForClientsCard() throws IOException{
+	public Card listenForClientsCard() throws IOException{
 		byte[] buffer = new byte[1024];
-		DatagramSocket receiveSocket = new DatagramSocket(receivePort);
+		receiveSocket = new DatagramSocket(receivePort);
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
 		byte[] data = packet.getData();
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
 		ObjectInputStream objectStream = new ObjectInputStream(inputStream);
+		Card message = null;
 		try {
-			Card message = (Card) objectStream.readObject();
+			message = (Card) objectStream.readObject();
 			System.out.println("Card received: " + message.suit + message.value);
 		} catch (ClassNotFoundException e) {
 			System.out.println("Not correct object. Moving on...");
@@ -86,6 +90,7 @@ public class CardGameServer extends CardGame{
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
+		return message;
 	}
 	
 	public void sendObjectTo(Object object, InetAddress ip, int port) throws IOException{
@@ -101,17 +106,16 @@ public class CardGameServer extends CardGame{
 	
 	//connects three players
 	public void findPlayers() {
+		//fix port bind issue
 			for(int i = 0; i < 3; i++) {
 				try {
 					listenAndAddClient();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				try {
 					sendObjectTo(players[i].name + " connected", clientIP[i], ports[i]);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}//end of loop
@@ -119,50 +123,102 @@ public class CardGameServer extends CardGame{
 	
 	public void startGame() {
 		for(int i = 0; i < 3; i++) {
-			try {
-				sendObjectTo("Start Game", clientIP[i], ports[i]);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			try {
-				listenForAck();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			boolean failed = true;
+			while(failed) {
+				failed = false;
+				try {
+					sendObjectTo("Start Game", clientIP[i], ports[i]);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					listenForAck();
+				} catch (SocketTimeoutException e) {
+					System.out.println("Timed out");
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+					failed = true;
+					receiveSocket.close();
+				}
+			}//end of while
 		}
 	}
 	
 	//send hand to player
 	public void sendHand(NPSOrderedArrayList<Card> hand, InetAddress ip, int port) {
-		try {
-			sendObjectTo(hand, ip, port);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		try {
-			listenForAck();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	//tell everyone what round it is
-	public void sendRound(String m) {
-		for(int i = 0; i < 3; i++) {
+		boolean failed = true;
+		while(failed) {
+			failed = false;
 			try {
-				sendObjectTo(m, clientIP[i], ports[i]);
+				sendObjectTo(hand, ip, port);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			try {
 				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	//tell everyone what round it is
+	public void sendStringToAll(String m) {
+		
+		for(int i = 0; i < 3; i++) {
+			boolean failed = true;
+			while(failed) {
+				failed = false;
+				try {
+					sendObjectTo(m, clientIP[i], ports[i]);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					listenForAck();
+				} catch (SocketTimeoutException e) {
+					System.out.println("Timed out");
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				} catch (IOException e) {
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void sendString(String m, InetAddress ip, int port) {
+		boolean failed = true;
+		while(failed) {
+			failed = false;
+			try {
+				sendObjectTo(m, ip, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			} catch (IOException e) {
+				failed = true;
+				receiveSocket.close();
 				e.printStackTrace();
 			}
 		}
@@ -170,31 +226,156 @@ public class CardGameServer extends CardGame{
 	
 	//tell everyone who's turn it is
 	public void sendTurn(String m, InetAddress ip, int port) {
-		try {
-			sendObjectTo(m, ip, port);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		boolean failed = true;
+		while(failed) {
+			failed = false;
+			try {
+				sendObjectTo(m, ip, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			} catch (IOException e) {
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			}
 		}
+	}
+	
+	//tell everyone what card was played
+	public void sendCardToAll(Card c) {
+		
+		for(int i = 0; i < 3; i++) {
+			boolean failed = true;
+			while(failed) {
+				failed = false;
+				try {
+					sendObjectTo(c, clientIP[i], ports[i]);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					listenForAck();
+				} catch (SocketTimeoutException e) {
+					System.out.println("Timed out");
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				} catch (IOException e) {
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void sendCard(Card c, InetAddress ip, int port) {
+		boolean failed = true;
+		while(failed) {
+			try {
+				sendObjectTo(c, ip, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			} catch (IOException e) {
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	//send everyone the scores
+	public void sendScoresToAll(Card[] c) {
+		for(int i = 0; i < 3; i++) {
+			boolean failed = true;
+			while(failed) {
+				failed = false;
+				try {
+					sendObjectTo(c, clientIP[i], ports[i]);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					listenForAck();
+				} catch (SocketTimeoutException e) {
+					System.out.println("Timed out");
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				} catch (IOException e) {
+					failed = true;
+					receiveSocket.close();
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void sendScores(Card[] c, InetAddress ip, int port) {
+		boolean failed = true;
+		while(failed) {
+			failed = false;
+			try {
+				sendObjectTo(c, ip, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			} catch (IOException e) {
+				failed = true;
+				receiveSocket.close();
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public Card receiveCard(String ack, InetAddress ip, int port) {
+		
+		Card received = null;
 		try {
-			listenForAck();
+			received = listenForClientsCard();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		//maybe send an ack in the final program. Need threads to sleep and loop first
+
+		return received;
+	}
+	
+	public void sendAck(String ack, InetAddress ip, int port) {
+		try {
+			sendObjectTo(ack, ip, port);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	public void receiveCard(String ack, InetAddress ip, int port) {
+	public void sleep(int ms) {
 		try {
-			listenForClientsCard();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		try {
-			sendObjectTo(ack, ip, port);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
@@ -208,8 +389,6 @@ public class CardGameServer extends CardGame{
 	/* ************The Online Game Starts Here*********************** */
 	//not finished yet
 	public void startOnlineGame() {
-		// TODO Auto-generated method stub
-		GameState gameState = new GameState();
 		int round = 1;
 
 //==========Initialize players====================================
@@ -236,130 +415,177 @@ public class CardGameServer extends CardGame{
 		Card thrdCard = new Card();
 		int maxValue;
 		
+		//set scores to 0
+		Card[] scores = new Card[3];
+		scores[0] = new Card(p1.name, p1.score);
+		scores[1] = new Card(p2.name, p2.score);
+		scores[2] = new Card(p3.name, p3.score);
+		sendScoresToAll(scores);
+		
 		//We are testing so round is at 1 and not 17
-		while(round<=1) {
+		while(round<=17) {
 			
 			System.out.println("Round " + round + ": ");
-			sendRound("Round " + round + " Starts: ");
+			
+			sendStringToAll("Round " + round + " Starts: ");
 			if(currentPlayer == p1) {
 				
-				sendTurn("Your Turn", clientIP[0], ports[0]);
 				sendTurn(players[0].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn(players[0].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[0], ports[0]);
 				
 				//gets card and sends ack
-				receiveCard("Ack", clientIP[0], ports[0]);
+				fstCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				sendCardToAll(fstCard);
 				
-//				fstCard = p1.play(0);
-//				sndCard = p2.play(0);
-//				thrdCard = p3.play(0);
-//				
-//
-////				These will be 
-//				leadingCard = fstCard;
-//				maxValue = fstCard.value;
-//				System.out.println("CurrentPlayer is p1");
-//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-//				System.out.println("p1's Card "+fstCard.suit+fstCard.value );
-//				System.out.println("p2's Card "+sndCard.suit+sndCard.value );
-//				System.out.println("p3's Card "+thrdCard.suit+thrdCard.value );
-//				
-//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-//					maxValue=sndCard.value;
-//					currentPlayer = p2;
-//					p2.score++;
-//					p2.sum += sndCard.value;
-//					System.out.println(p2.name + " wins Round " + round);
-//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-//					maxValue=thrdCard.value;
-//					currentPlayer=p3;
-//					p3.score++;
-//					p3.sum += thrdCard.value;
-//					System.out.println(p3.name + " wins Round " + round);
-//				} else {
-//					p1.score++;
-//					p1.sum += fstCard.value;
-//					System.out.println(p1.name + " wins Round " + round);
-//				}
-//
-//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
-//				
-//			} else if(currentPlayer == p2){
-//				
-//
-//				fstCard = p2.play(0);
-//				sndCard = p3.play(0);
-//				thrdCard = p1.play(0);
-//
-////				These will be 
-//				leadingCard = fstCard;
-//				maxValue = fstCard.value;
-//				System.out.println("CurrentPlayer is p2");
-//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-//				System.out.println("p2's Card "+fstCard.suit+fstCard.value );
-//				System.out.println("p3's Card "+sndCard.suit+sndCard.value );
-//				System.out.println("p1's Card "+thrdCard.suit+thrdCard.value );
-//				
-//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-//					maxValue=sndCard.value;
-//					currentPlayer = p3;
-//					p3.score++;
-//					p3.sum += sndCard.value;
-//					System.out.println(p3.name + " wins Round " + round);
-//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-//					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
-//					maxValue=thrdCard.value;
-//					currentPlayer=p1;
-//					p1.score++;
-//					p1.sum += thrdCard.value;
-//					System.out.println(p1.name + " wins Round " + round);
-//				} else {
-//					p2.score++;
-//					p2.sum += fstCard.value;
-//					System.out.println(p2.name + " wins Round " + round);
-//				}
-//
-//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
-//				
-//			} else {
-//
-//				fstCard = p3.play(0);
-//				sndCard = p1.play(0);
-//				thrdCard = p2.play(0);
-//
-//				leadingCard = fstCard;
-//				maxValue = fstCard.value;
-//
-//				System.out.println("CurrentPlayer is p3");
-//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-//				System.out.println("p3's Card "+fstCard.suit+fstCard.value );
-//				System.out.println("p1's Card "+sndCard.suit+sndCard.value );
-//				System.out.println("p2's Card "+thrdCard.suit+thrdCard.value );
-//				
-//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-//					maxValue=sndCard.value;
-//					currentPlayer = p1;
-//					p1.score++;
-//					p1.sum += sndCard.value;
-//					System.out.println(p1.name + " wins Round " + round);
-//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-//					maxValue=thrdCard.value;
-//					currentPlayer=p2;
-//					p2.score++;
-//					p2.sum += thrdCard.value;
-//					System.out.println(p2.name + " wins Round " + round);
-//				} else {
-//					p3.score++;
-//					p3.sum += fstCard.value;
-//					System.out.println(p3.name + " wins Round " + round);
-//				}
-//
-//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+				//second player's turn
+				sendTurn(players[1].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[1], ports[1]);
+				sndCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				sendCardToAll(sndCard);
+				
+				//third player's turn
+				sendTurn(players[2].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
+				sendTurn("Your Turn", clientIP[2], ports[2]);
+				thrdCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				sendCardToAll(thrdCard);
+				
+				//find winner
+				leadingCard = fstCard;
+				maxValue = fstCard.value;
+				
+				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
+					maxValue=sndCard.value;
+					currentPlayer = p2;
+					p2.score++;
+					p2.sum += sndCard.value;
+					sendStringToAll(p2.name + " wins Round " + round);
+					System.out.println(p2.name + " wins Round " + round);
+				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					maxValue=thrdCard.value;
+					currentPlayer=p3;
+					p3.score++;
+					p3.sum += thrdCard.value;
+					sendStringToAll(p3.name + " wins Round " + round);
+					System.out.println(p3.name + " wins Round " + round);
+				} else {
+					p1.score++;
+					p1.sum += fstCard.value;
+					sendStringToAll(p1.name + " wins Round " + round);
+					System.out.println(p1.name + " wins Round " + round);
+				}
+				
+				//need to send scores to players here
+				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+				scores[0] = new Card(p1.name, p1.score);
+				scores[1] = new Card(p2.name, p2.score);
+				scores[2] = new Card(p3.name, p3.score);
+				sendScoresToAll(scores);
+				
+			} else if(currentPlayer == p2){
+				sendTurn(players[1].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[1], ports[1]);
+				fstCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				sendCardToAll(fstCard);
+				
+				sendTurn(players[2].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
+				sendTurn("Your Turn", clientIP[2], ports[2]);
+				sndCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				sendCardToAll(sndCard);
+				
+				sendTurn(players[0].name + "'s Turn", clientIP[1], ports[1]);
+				sendTurn(players[0].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[0], ports[0]);
+				thrdCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				sendCardToAll(thrdCard);
+
+//				These will be 
+				leadingCard = fstCard;
+				maxValue = fstCard.value;
+				
+				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
+					maxValue=sndCard.value;
+					currentPlayer = p3;
+					p3.score++;
+					p3.sum += sndCard.value;
+					sendStringToAll(p3.name + " wins Round " + round);
+					System.out.println(p3.name + " wins Round " + round);
+				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
+					maxValue=thrdCard.value;
+					currentPlayer=p1;
+					p1.score++;
+					p1.sum += thrdCard.value;
+					sendStringToAll(p1.name + " wins Round " + round);
+					System.out.println(p1.name + " wins Round " + round);
+				} else {
+					p2.score++;
+					p2.sum += fstCard.value;
+					sendStringToAll(p2.name + " wins Round " + round);
+					System.out.println(p2.name + " wins Round " + round);
+				}
+				
+				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+				scores[0] = new Card(p1.name, p1.score);
+				scores[1] = new Card(p2.name, p2.score);
+				scores[2] = new Card(p3.name, p3.score);
+				sendScoresToAll(scores);
+				
+			} else {
+				sendTurn(players[2].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
+				sendTurn("Your Turn", clientIP[2], ports[2]);
+				fstCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				sendCardToAll(fstCard);
+				
+				sendTurn(players[0].name + "'s Turn", clientIP[1], ports[1]);
+				sendTurn(players[0].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[0], ports[0]);
+				sndCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				sendCardToAll(sndCard);
+				
+				sendTurn(players[1].name + "'s Turn", clientIP[0], ports[0]);
+				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
+				sendTurn("Your Turn", clientIP[1], ports[1]);
+				thrdCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				sendCardToAll(thrdCard);
+
+				leadingCard = fstCard;
+				maxValue = fstCard.value;
+				
+				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
+					maxValue=sndCard.value;
+					currentPlayer = p1;
+					p1.score++;
+					p1.sum += sndCard.value;
+					sendStringToAll(p1.name + " wins Round " + round);
+					System.out.println(p1.name + " wins Round " + round);
+				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					maxValue=thrdCard.value;
+					currentPlayer=p2;
+					p2.score++;
+					p2.sum += thrdCard.value;
+					sendStringToAll(p2.name + " wins Round " + round);
+					System.out.println(p2.name + " wins Round " + round);
+				} else {
+					p3.score++;
+					p3.sum += fstCard.value;
+					sendStringToAll(p3.name + " wins Round " + round);
+					System.out.println(p3.name + " wins Round " + round);
+				}
+				
+				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+				scores[0] = new Card(p1.name, p1.score);
+				scores[1] = new Card(p2.name, p2.score);
+				scores[2] = new Card(p3.name, p3.score);
+				sendScoresToAll(scores);
 			}
-//			System.out.println(p1.sum+" "+p2.sum+" "+p3.sum);
-//			
+			
 			round++;
-////			currentPlayer = checkForWinner();
 		}//end of loop
 //		checkForWin(p1,p2,p3);
 	}//end of online game
