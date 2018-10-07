@@ -11,13 +11,13 @@ public class Deck {
 	public NPSOrderedArrayList<Card> create() {
 			for (int i=1;i<=52;i++) {
 				if(i>=1 && i<=13) {
-					deck.add(new Card("c", i+1));
+					deck.add(new Card("C", i+1));
 				} else if(i>13 && i<=26) {
-					deck.add(new Card("d", i-12));
+					deck.add(new Card("D", i-12));
 				}else if(i>26 && i<=39) {
-					deck.add(new Card("h", i-25));
+					deck.add(new Card("H", i-25));
 				}else if(i>39 && i<=52) {
-					deck.add(new Card("s", i-38));
+					deck.add(new Card("S", i-38));
 			}
 
 //				System.out.println(deck.get(i).suit +" "+deck.get(i).value);

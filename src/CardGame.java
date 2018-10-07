@@ -1,7 +1,7 @@
 public class CardGame extends Thread{
 
 	
-	public static void distribute(Player p1, Player p2, Player p3, NPSOrderedArrayList<Card> deck) {
+	public void distribute(Player p1, Player p2, Player p3, NPSOrderedArrayList<Card> deck) {
 		
 //		Distributing the deck into hands for each player
 //		Distributes 51 cards into 3 hands
@@ -15,58 +15,59 @@ public class CardGame extends Thread{
 			}else if (i%3==2){
 				p3.hand.add(deck.get(i));
 			}
-			
 		}
 	}
 	
 	//changed checkForWin to take Player parameters 9/28/18
-	public static void checkForWin(Player p1, Player p2, Player p3) {
+	public String checkForWin(Player p1, Player p2, Player p3) {
+		String message = "";
 		if(p1.score >= p2.score) {
 			if(p1.score > p3.score) {
-				System.out.println(p1.name + " is the winner!");
+				message = p1.name + " is the winner!";
 			} else if(p1.score < p3.score) {
-				System.out.println(p3.name + " is the winner!");
+				message = (p3.name + " is the winner!");
 			} else if(p1.score == p2.score) {
-				System.out.println(p1.name + " and " +p2.name +" are tied!");
+				message = (p1.name + " and " +p2.name +" are tied!");
 				if(p1.sum > p2.sum) {
-					System.out.println("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
+					message = ("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
 				}
 				else if(p1.sum == p2.sum) {
-					System.out.println("Both " + p1.name + " and " + p2.name + "'s winning cards have same value, so they both tie.");
+					message = ("Both " + p1.name + " and " + p2.name + "'s winning cards have same value, so they both tie.");
 				}
 				else {
-					System.out.println("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
+					message = ("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
 				}
 			} else if(p2.score == p3.score) {
-				System.out.println(p2.name + " and " +p3.name +" are tied!");
+				message = (p2.name + " and " +p3.name +" are tied!");
 				if(p2.sum > p3.sum) {
-					System.out.println("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
+					message = ("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
 				}
 				else if(p2.sum == p3.sum) {
-					System.out.println("Both " + p2.name + " and " + p3.name + "'s winning cards have same value, so they both tie.");
+					message = ("Both " + p2.name + " and " + p3.name + "'s winning cards have same value, so they both tie.");
 				}
 				else {
-					System.out.println("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
+					message = ("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
 				}
 			} else if(p3.score == p1.score) {
-				System.out.println(p3.name + " and " +p1.name +" are tied!");
+				message = (p3.name + " and " +p1.name +" are tied!");
 				if(p3.sum > p1.sum) {
-					System.out.println("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
+					message = ("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
 				}
 				else if(p3.sum == p1.sum) {
-					System.out.println("Both " + p3.name + " and " + p1.name + "'s winning cards have same value, so they both tie.");
+					message = ("Both " + p3.name + " and " + p1.name + "'s winning cards have same value, so they both tie.");
 				}
 				else {
-					System.out.println("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
+					message = ("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
 				}
 			}
 		} else if(p1.score < p2.score) {
 			if(p2.score > p3.score) {
-				System.out.println(p2.name + " is the winner!");
+				message = (p2.name + " is the winner!");
 			} else if(p2.score <p3.score) {
-				System.out.println(p3.name + " is the winner!");
+				message = (p3.name + " is the winner!");
 			}
 		}
+		return message;
 	}
 	
 	public void startLocalGame() {
@@ -80,7 +81,10 @@ public class CardGame extends Thread{
 		Player p1 = new Player("Player 1", G1);
 		Player p2 = new Player("Player 2", G2);
 		Player p3 = new Player("Player 3", G3);
-	
+		
+		p1.gameGui.displayMessage("The Game Starts");
+		p2.gameGui.displayMessage("The Game Starts");
+		p3.gameGui.displayMessage("The Game Starts");
 		
 		Player currentPlayer = p1;
 		
@@ -92,6 +96,15 @@ public class CardGame extends Thread{
 		
 //		Distribute the cards amongst the players hands
 		distribute(p1,p2,p3, deck);
+		
+		p1.gameGui.displayMessage("You received your cards");
+		p1.gameGui.CreateButtons(p1.hand);
+		p2.gameGui.displayMessage("You received your cards");
+		p2.gameGui.CreateButtons(p2.hand);
+		p3.gameGui.displayMessage("You received your cards");
+		p3.gameGui.CreateButtons(p3.hand);
+		
+		
 		Card leadingCard = new Card();
 		Card fstCard = new Card();
 		Card sndCard = new Card();
@@ -99,124 +112,129 @@ public class CardGame extends Thread{
 		int maxValue;
 		
 //		We are testing so round is at 1 and not 17
-		while(round<=17) {
+//		while(round<=17) {
 			
 			System.out.println("Round " + round + ": ");
-			if(currentPlayer == p1) {
+			p1.gameGui.displayMessage("Round " + round + ":");
+			p2.gameGui.displayMessage("Round " + round + ":");
+			p3.gameGui.displayMessage("Round " + round + ":");
+//			if(currentPlayer == p1) {
 				
-				//p1.gui.display(p1.name + "'s turn");
-				fstCard = p1.play(0);
-				sndCard = p2.play(0);
-				thrdCard = p3.play(0);
-				
-
-//				These will be 
-				leadingCard = fstCard;
-				maxValue = fstCard.value;
-				System.out.println("CurrentPlayer is p1");
-				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-				System.out.println("p1's Card "+fstCard.suit+fstCard.value );
-				System.out.println("p2's Card "+sndCard.suit+sndCard.value );
-				System.out.println("p3's Card "+thrdCard.suit+thrdCard.value );
-				
-				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-					maxValue=sndCard.value;
-					currentPlayer = p2;
-					p2.score++;
-					p2.sum += sndCard.value;
-					System.out.println(p2.name + " wins Round " + round);
-				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-					maxValue=thrdCard.value;
-					currentPlayer=p3;
-					p3.score++;
-					p3.sum += thrdCard.value;
-					System.out.println(p3.name + " wins Round " + round);
-				} else {
-					p1.score++;
-					p1.sum += fstCard.value;
-					System.out.println(p1.name + " wins Round " + round);
-				}
-
-				System.out.println(p1.score+" "+p2.score+" "+p3.score);
-				
-			} else if(currentPlayer == p2){
-				
-
-				fstCard = p2.play(0);
-				sndCard = p3.play(0);
-				thrdCard = p1.play(0);
-
-//				These will be 
-				leadingCard = fstCard;
-				maxValue = fstCard.value;
-				System.out.println("CurrentPlayer is p2");
-				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-				System.out.println("p2's Card "+fstCard.suit+fstCard.value );
-				System.out.println("p3's Card "+sndCard.suit+sndCard.value );
-				System.out.println("p1's Card "+thrdCard.suit+thrdCard.value );
-				
-				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-					maxValue=sndCard.value;
-					currentPlayer = p3;
-					p3.score++;
-					p3.sum += sndCard.value;
-					System.out.println(p3.name + " wins Round " + round);
-				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
-					maxValue=thrdCard.value;
-					currentPlayer=p1;
-					p1.score++;
-					p1.sum += thrdCard.value;
-					System.out.println(p1.name + " wins Round " + round);
-				} else {
-					p2.score++;
-					p2.sum += fstCard.value;
-					System.out.println(p2.name + " wins Round " + round);
-				}
-
-				System.out.println(p1.score+" "+p2.score+" "+p3.score);
-				
-			} else {
-
-				fstCard = p3.play(0);
-				sndCard = p1.play(0);
-				thrdCard = p2.play(0);
-
-				leadingCard = fstCard;
-				maxValue = fstCard.value;
-
-				System.out.println("CurrentPlayer is p3");
-				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
-				System.out.println("p3's Card "+fstCard.suit+fstCard.value );
-				System.out.println("p1's Card "+sndCard.suit+sndCard.value );
-				System.out.println("p2's Card "+thrdCard.suit+thrdCard.value );
-				
-				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
-					maxValue=sndCard.value;
-					currentPlayer = p1;
-					p1.score++;
-					p1.sum += sndCard.value;
-					System.out.println(p1.name + " wins Round " + round);
-				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
-					maxValue=thrdCard.value;
-					currentPlayer=p2;
-					p2.score++;
-					p2.sum += thrdCard.value;
-					System.out.println(p2.name + " wins Round " + round);
-				} else {
-					p3.score++;
-					p3.sum += fstCard.value;
-					System.out.println(p3.name + " wins Round " + round);
-				}
-
-				System.out.println(p1.score+" "+p2.score+" "+p3.score);
-			}
-			System.out.println(p1.sum+" "+p2.sum+" "+p3.sum);
-			
-			round++;
-//			currentPlayer = checkForWinner();
-		}//end of loop
-		checkForWin(p1,p2,p3);
+				p1.gameGui.setTurn("Your Turn");
+				p2.gameGui.setTurn("It is " + p1.name + "'s turn");
+				p3.gameGui.setTurn("It is " + p1.name + "'s turn");
+//				fstCard = p1.play(0);
+				System.out.println("Got it " + fstCard.suit);
+//				sndCard = p2.play(0);
+//				thrdCard = p3.play(0);
+//				
+//
+////				These will be 
+//				leadingCard = fstCard;
+//				maxValue = fstCard.value;
+//				System.out.println("CurrentPlayer is p1");
+//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
+//				System.out.println("p1's Card "+fstCard.suit+fstCard.value );
+//				System.out.println("p2's Card "+sndCard.suit+sndCard.value );
+//				System.out.println("p3's Card "+thrdCard.suit+thrdCard.value );
+//				
+//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
+//					maxValue=sndCard.value;
+//					currentPlayer = p2;
+//					p2.score++;
+//					p2.sum += sndCard.value;
+//					System.out.println(p2.name + " wins Round " + round);
+//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
+//					maxValue=thrdCard.value;
+//					currentPlayer=p3;
+//					p3.score++;
+//					p3.sum += thrdCard.value;
+//					System.out.println(p3.name + " wins Round " + round);
+//				} else {
+//					p1.score++;
+//					p1.sum += fstCard.value;
+//					System.out.println(p1.name + " wins Round " + round);
+//				}
+//
+//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+//				
+//			} else if(currentPlayer == p2){
+//				
+//
+//				fstCard = p2.play(0);
+//				sndCard = p3.play(0);
+//				thrdCard = p1.play(0);
+//
+////				These will be 
+//				leadingCard = fstCard;
+//				maxValue = fstCard.value;
+//				System.out.println("CurrentPlayer is p2");
+//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
+//				System.out.println("p2's Card "+fstCard.suit+fstCard.value );
+//				System.out.println("p3's Card "+sndCard.suit+sndCard.value );
+//				System.out.println("p1's Card "+thrdCard.suit+thrdCard.value );
+//				
+//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
+//					maxValue=sndCard.value;
+//					currentPlayer = p3;
+//					p3.score++;
+//					p3.sum += sndCard.value;
+//					System.out.println(p3.name + " wins Round " + round);
+//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
+//					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
+//					maxValue=thrdCard.value;
+//					currentPlayer=p1;
+//					p1.score++;
+//					p1.sum += thrdCard.value;
+//					System.out.println(p1.name + " wins Round " + round);
+//				} else {
+//					p2.score++;
+//					p2.sum += fstCard.value;
+//					System.out.println(p2.name + " wins Round " + round);
+//				}
+//
+//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+//				
+//			} else {
+//
+//				fstCard = p3.play(0);
+//				sndCard = p1.play(0);
+//				thrdCard = p2.play(0);
+//
+//				leadingCard = fstCard;
+//				maxValue = fstCard.value;
+//
+//				System.out.println("CurrentPlayer is p3");
+//				System.out.println("Leading "+leadingCard.suit+leadingCard.value );
+//				System.out.println("p3's Card "+fstCard.suit+fstCard.value );
+//				System.out.println("p1's Card "+sndCard.suit+sndCard.value );
+//				System.out.println("p2's Card "+thrdCard.suit+thrdCard.value );
+//				
+//				if(sndCard.suit == leadingCard.suit && sndCard.value > maxValue) {
+//					maxValue=sndCard.value;
+//					currentPlayer = p1;
+//					p1.score++;
+//					p1.sum += sndCard.value;
+//					System.out.println(p1.name + " wins Round " + round);
+//				} else if(thrdCard.suit == leadingCard.suit && thrdCard.value > maxValue) {
+//					maxValue=thrdCard.value;
+//					currentPlayer=p2;
+//					p2.score++;
+//					p2.sum += thrdCard.value;
+//					System.out.println(p2.name + " wins Round " + round);
+//				} else {
+//					p3.score++;
+//					p3.sum += fstCard.value;
+//					System.out.println(p3.name + " wins Round " + round);
+//				}
+//
+//				System.out.println(p1.score+" "+p2.score+" "+p3.score);
+//			}
+//			System.out.println(p1.sum+" "+p2.sum+" "+p3.sum);
+//			
+//			round++;
+//		//}//end of loop
+//		System.out.println(checkForWin(p1,p2,p3));
 }
 	
 }

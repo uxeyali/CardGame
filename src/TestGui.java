@@ -9,6 +9,8 @@ import java.net.UnknownHostException;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
+import com.sun.glass.events.WindowEvent;
+
 /* *****************This Class only exists to test the Networking***************** */
 public class TestGui extends JFrame{
 	JFrame Main = new JFrame();
@@ -24,6 +26,9 @@ public class TestGui extends JFrame{
 	private JTextField textFieldName;
 	private JTextField textFieldNameServer;
 	JTextField textFieldPort;
+	JButton btnCreateServer;
+	JButton btnJoinServer;
+	JButton btnLocalGame;
 	JButton btnConnect;
 	JButton btnPlay;
 	String playerName;
@@ -37,17 +42,18 @@ public class TestGui extends JFrame{
 	}
 	
 	void gotoMain() {
+		Main.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		Main.setSize(new Dimension(230, 310));
 		Main.getContentPane().setLayout(null);
 		Main.setVisible(true);
 		
 		panel.setSize(new Dimension(170, 240));
-		panel.setBounds(20, 10, 307, 249);
+		panel.setBounds(0, 10, 214, 249);
 		Main.getContentPane().add(panel);
 		panel.setLayout(null);
 		
-		JButton btnCreateServer = new JButton("Create Server");
-		btnCreateServer.setBounds(38, 123, 126, 23);
+		btnCreateServer = new JButton("Create Server");
+		btnCreateServer.setBounds(38, 44, 126, 23);
 		panel.add(btnCreateServer);
 		btnCreateServer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -55,8 +61,8 @@ public class TestGui extends JFrame{
 			}
 		});
 		
-		JButton btnJoinServer = new JButton("Join Server");
-		btnJoinServer.setBounds(38, 58, 126, 23);
+		btnJoinServer = new JButton("Join Server");
+		btnJoinServer.setBounds(38, 78, 126, 23);
 		btnJoinServer.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				gotoJoin();
@@ -64,20 +70,20 @@ public class TestGui extends JFrame{
 		});
 		panel.add(btnJoinServer);
 		
-		JButton btnLocalGame = new JButton("Local Game");
+		btnLocalGame = new JButton("Local Game");
 		btnLocalGame.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
-				CardGame CG = new CardGame();
-				CG.startLocalGame();
-				GameGui GG = new GameGui();
-				Player h = new Player();
-				GG.CreateButton(h.hand);
-				
+				makeLocalGame();
 			}
 		});
-		btnLocalGame.setBounds(38, 10, 126, 23);
+		btnLocalGame.setBounds(38, 11, 126, 23);
 		panel.add(btnLocalGame);
+		Main.repaint();
+	}
+	
+	public void makeLocalGame() {
+		CardGame CG = new CardGame();
+		CG.startLocalGame();
 	}
 	
 	void gotoTestWindow() {
@@ -95,7 +101,6 @@ public class TestGui extends JFrame{
 		Main.getContentPane().add(testPanel);
 		testPanel.setLayout(null);
 		//adds textArea
-		
 		
 		textAreaJoin = new JTextArea();
 		JScrollPane scrollPane = new JScrollPane();
@@ -131,6 +136,7 @@ public class TestGui extends JFrame{
 				p.play(0);
 			}
 		});
+		Main.repaint();
 	}
 	
 	void gotoCreateServer() {
@@ -181,6 +187,7 @@ public class TestGui extends JFrame{
 				makeServerClient();
 			}
 		});
+		Main.repaint();
 	}
 	
 	void gotoJoin() {
@@ -238,8 +245,11 @@ public class TestGui extends JFrame{
 				makeClient();
 			}
 		});
+		Main.repaint();
 	}//end of method
 	
+	
+	//********************This is used to display values to the player****************
 	void display(String message) {
 		textAreaJoin.append(message + "\n");
 	}
@@ -247,9 +257,9 @@ public class TestGui extends JFrame{
 	void displayScores(String messgae) {
 		textAreaScores.setText(messgae);
 	}
+	//********************************************************************************
 	
-	
-	
+	//**********************Stuff for Server********************************
 	//starts server object
 	void makeServer() {
 		//Starts server

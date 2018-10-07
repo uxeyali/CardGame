@@ -15,7 +15,9 @@ public class Player extends Thread{
 	String name;
 	int score;
 	int sum;
-	GameGui View;
+	GameGui gameGui;
+	private Card lastPlayed = null;
+	
 	//constructor
 	public Player() {
 		this.hand = new NPSOrderedArrayList<Card>();
@@ -27,7 +29,8 @@ public class Player extends Thread{
 		this.hand = new NPSOrderedArrayList<Card>();
 		this.score = 0;
 		this.sum = 0;
-		View = i;
+		gameGui = i;
+		gameGui.setPlayer(this);
 	}
 	
 	public Player(String name) {
@@ -40,11 +43,24 @@ public class Player extends Thread{
 	public Card play(int index) {
 		Card cardPlayed = this.hand.get(index);
 		hand.remove(index);
+		lastPlayed = cardPlayed;
 		return cardPlayed;
+	}
+	
+	public Card getLastPlayed() {
+		while(lastPlayed == null) {
+			//loops until a card is played
+		}
+		return lastPlayed;
 	}
 	
 	public void setPlayerName(String name) {
 		this.name = name;
+	}
+	
+	public void setGameGui(GameGui g) {
+		gameGui = g;
+		gameGui.setPlayer(this);
 	}
 	
 	

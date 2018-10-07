@@ -2,12 +2,8 @@
 public class Driver {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-//		CardGame game = new CardGame();
-//		game.startLocalGame();
-		
+		// TODO Auto-generated method stub		
 		TestGui t = new TestGui();
-		
 	}
 
 }
