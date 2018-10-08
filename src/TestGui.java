@@ -293,4 +293,9 @@ public class TestGui extends JFrame{
 		p = new Player(playerName, this, serverIP, Integer.parseInt(textFieldPort.getText()));
 		p.start();
 	}
+	
+	void openGameGui() {
+		GameGui g = new GameGui();
+		p.setGameGui(g);
+	}
 }

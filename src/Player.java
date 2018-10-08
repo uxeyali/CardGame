@@ -71,11 +71,13 @@ public class Player extends Thread{
 	int receivePort;
 	PlayerData myData;
 	Boolean myTurn = false;
+	Boolean mustPlayLead = false;
+	String leadingSuit;
 	DatagramSocket receiveSocket;
 	
 	//sending port 30480
 	//receiving port 5000-5002
-	public Player(String name, TestGui gui,InetAddress serverIP, int port) {
+	public Player(String name, TestGui gui, InetAddress serverIP, int port) {
 		this.name = name;
 		this.hand = new NPSOrderedArrayList<Card>();
 		this.score = 0;
@@ -88,6 +90,12 @@ public class Player extends Thread{
 	
 	public void setServerIP(InetAddress serverIP) {
 		this.serverIP = serverIP;
+	}
+	
+	public void openGameGui() {
+		gameGui = new GameGui();
+		gameGui.setPlayer(this);
+		gui.Main.setVisible(false);
 	}
 	
 	public void sendToServer(Object object) throws IOException{
@@ -114,21 +122,27 @@ public class Player extends Thread{
 		try {
 			String message = (String) objectStream.readObject();
 			//in the final program, we'll check if the object is a String, card, or hand
-			gui.display(message);
-			System.out.println(message);
 			//compare strings to cause an effect
 			if(message.equals("Start Game")) {
-				gui.gotoTestWindow();
+				//gui.gotoTestWindow();
+				openGameGui();
+				gameGui.displayMessage("Game started. Waiting...");
 				gui.display("Game started. Waiting...");
 			}
-			if(message.equals("Your Turn")) {
+			else if(message.equals("Your Turn")) {
 				gui.display("It's your turn, " + name);
 				gui.btnPlay.setEnabled(true);
 				myTurn = true;
 			}
+			else {
+				gui.display(message);
+				//gameGui.displayMessage(message);
+				System.out.println(message);
+			}
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			gui.display("Not correct object. Moving on...");
+			gameGui.displayMessage("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
@@ -138,6 +152,7 @@ public class Player extends Thread{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
 		gui.display("Waiting...");
+		gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -147,10 +162,12 @@ public class Player extends Thread{
 		try {
 			String message = (String) objectStream.readObject();
 			gui.display(message);
+			gameGui.displayMessage(message);
 			System.out.println(message);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			gui.display("Not correct object. Moving on...");
+			gameGui.displayMessage("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
@@ -160,6 +177,7 @@ public class Player extends Thread{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
 		gui.display("Waiting...");
+		gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -170,10 +188,13 @@ public class Player extends Thread{
 			NPSOrderedArrayList<Card> message = (NPSOrderedArrayList<Card>) objectStream.readObject();
 			System.out.println("Got a hand " + message.get(0).value);
 			hand = message;
+			gameGui.CreateButtons(hand);
 			gui.display("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
+			gameGui.displayMessage("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			gui.display("Not correct object. Moving on...");
+			gameGui.displayMessage("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
@@ -183,6 +204,7 @@ public class Player extends Thread{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
 		gui.display("Waiting...");
+		gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -193,9 +215,11 @@ public class Player extends Thread{
 			Card message = (Card) objectStream.readObject();
 			System.out.println("Got a card: " + message.suit + message.value);
 			gui.display(message.suit + message.value + " has been played");
+			gameGui.displayMessage(message.suit + message.value + " has been played");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			gui.display("Not correct object. Moving on...");
+			gameGui.displayMessage("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
@@ -205,6 +229,7 @@ public class Player extends Thread{
 		byte[] buffer = new byte[1024];
 		DatagramSocket receiveSocket = new DatagramSocket(receivePort);
 		gui.display("Waiting...");
+		gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -214,12 +239,13 @@ public class Player extends Thread{
 		try {
 			Card[] message = (Card[]) objectStream.readObject();
 			System.out.println("Got a card array: " + message[0].suit + message[0].value);
-			gui.displayScores(message[0].suit + ": " + message[0].value + "\n" 
-								+ message[1].suit + ": " + message[1].value + "\n"
-								+ message[2].suit + ": " + message[2].value + "\n");
+			gameGui.setScores(message[0].suit + ": " + message[0].value + "\n" 
+					+ message[1].suit + ": " + message[1].value + "\n"
+					+ message[2].suit + ": " + message[2].value + "\n");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			gui.display("Not correct object. Moving on...");
+			gameGui.displayMessage("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		receiveSocket.close();
@@ -231,6 +257,7 @@ public class Player extends Thread{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
 		//gui.display("Waiting...");
+		gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -247,24 +274,35 @@ public class Player extends Thread{
 		try {
 			String message = (String) objectStream1.readObject();
 			//in the final program, we'll check if the object is a String, card, or hand
-			gui.display(message);
-			System.out.println(message);
 			//compare strings to cause an effect
 			if(message.equals("Start Game")) {
-				gui.gotoTestWindow();
+				//gui.gotoTestWindow();
+				openGameGui();
 				gui.display("Game started. Waiting...");
+				gameGui.displayMessage("Game started. Waiting...");
 			}
-			if(message.equals("Your Turn")) {
+			else if(message.equals("Your Turn")) {
 				gui.display("It's your turn, " + name);
-				gui.btnPlay.setEnabled(true);
+				//gui.btnPlay.setEnabled(true);
+				gameGui.displayMessage("It's your turn, " + name);
+				//disables buttons if I have a leading card
+				if(mustPlayLead) {
+					gameGui.enableSome(leadingSuit);
+					mustPlayLead = false;
+				}
+				else {
+					gameGui.enableAll();
+				}
 				myTurn = true;
 			}
+			else {
+				gui.display(message);
+				gameGui.displayMessage(message);
+				System.out.println(message);
+			}
 		}catch (ClassCastException e) {
-				System.out.println("Not correct object. Moving on...");
-				//gui.display("Not correct object. Moving on...");
+			System.out.println("Not correct object. Moving on...");
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		//check if hand
@@ -273,16 +311,12 @@ public class Player extends Thread{
 			System.out.println("Got a hand " + message.get(0).value);
 			hand = message;
 			gui.display("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
+			gameGui.displayMessage("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
 		}catch (ClassCastException e) {
 			System.out.println("Not correct object. Moving on...");
-			//gui.display("Not correct object. Moving on...");
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		} catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		//check if card
@@ -290,35 +324,43 @@ public class Player extends Thread{
 			Card message = (Card) objectStream3.readObject();
 			System.out.println("Got a card: " + message.suit + message.value);
 			gui.display(message.suit + message.value + " has been played");
+			gameGui.displayMessage(message.suit + message.value + " has been played");
+			gameGui.displayCard(message);
+			
+			//this fixes an issue where the first player was stuck playing the same suit of their first card
+			if(lastPlayed != null) {
+				if(message.suit.equals(lastPlayed.suit) && message.value == lastPlayed.value) {
+					mustPlayLead = false;
+				}
+				else if(message.isLead) {
+					mustPlayLead = true;
+					leadingSuit = message.suit;
+				}
+			}
+			else if(message.isLead) {
+				mustPlayLead = true;
+				leadingSuit = message.suit;
+			}
 		}catch (ClassCastException e) {
 			System.out.println("Not correct object. Moving on...");
-			//gui.display("Not correct object. Moving on...");
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		//check if card array
 		try {
 			Card[] message = (Card[]) objectStream4.readObject();
 			System.out.println("Got a card array: " + message[0].suit + message[0].value);
-			gui.displayScores(message[0].suit + ": " + message[0].value + "\n" 
-								+ message[1].suit + ": " + message[1].value + "\n"
-								+ message[2].suit + ": " + message[2].value + "\n");
+			gameGui.clearCards();
+			gameGui.setScores(message[0].suit + ": " + message[0].value + "\n" 
+					+ message[1].suit + ": " + message[1].value + "\n"
+					+ message[2].suit + ": " + message[2].value + "\n");
 		}catch (ClassCastException e) {
 			System.out.println("Not correct object. Moving on...");
-			//gui.display("Not correct object. Moving on...");
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}catch (StreamCorruptedException e) {
-			// TODO Auto-generated catch block
-			//gui.display("Not correct object. Moving on...");
 			System.out.println("Not correct object. Moving on...");
 		}
 		finished = true;
@@ -329,7 +371,6 @@ public class Player extends Thread{
 		try {
 			sendToServer(myData);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		try {
@@ -380,6 +421,7 @@ public class Player extends Thread{
 			} catch (ClassCastException e) {
 				System.out.println("Received wrong object");
 				gui.display("Received wrong object");
+				gameGui.displayMessage("Received wrong object");
 				failed = true;
 				receiveSocket.close();
 				e.printStackTrace();
@@ -400,6 +442,7 @@ public class Player extends Thread{
 	
 	public void sendCard() {
 		gui.display("You played: " + hand.get(0).suit + hand.get(0).value);
+		gameGui.displayMessage("You played: " + hand.get(0).suit + hand.get(0).value);
 		try {
 			sendToServer(hand.get(0));
 			gui.btnPlay.setEnabled(false);
@@ -430,6 +473,7 @@ public class Player extends Thread{
 			} catch (ClassCastException e) {
 				System.out.println("Received wrong object");
 				gui.display("Received wrong object");
+				gameGui.displayMessage("Received wrong object");
 				failed = true;
 				receiveSocket.close();
 				e.printStackTrace();
@@ -458,6 +502,7 @@ public class Player extends Thread{
 			} catch (ClassCastException e) {
 				System.out.println("Received wrong object");
 				gui.display("Received wrong object");
+				gameGui.displayMessage("Received wrong object");
 				failed = true;
 				receiveSocket.close();
 				e.printStackTrace();
@@ -515,25 +560,5 @@ public class Player extends Thread{
 			waitForAnything();
 		}
 	}
-	
-//	int round = 1;
-//	while(round <= 17) {
-//		//start round
-//		waitForStrings();
-//		//wait for 1st player's turns
-//		waitForStrings();
-//		waitForCards();		//happens here too...
-//		//wait for 2nd player's turn
-//		waitForStrings();
-//		waitForCards();		
-//		//wait for 3rd player's turn
-//		waitForStrings();
-//		waitForCards();		//one of the clients is receiving a String instead of a Card...
-//		//wait for winner
-//		waitForStrings();	//one of the clients is receiving a Card here instead of a String...
-//		//wait for scores
-//		waitForScores();
-//		round++;
-//	}
 	
 }

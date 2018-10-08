@@ -53,7 +53,7 @@ public class CardGameServer extends CardGame{
 	public void listenForAck() throws IOException, SocketTimeoutException{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
-		receiveSocket.setSoTimeout(3000);
+		receiveSocket.setSoTimeout(1000);
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -403,7 +403,7 @@ public class CardGameServer extends CardGame{
 //		Shuffle the deck
 		deck = maindeck.shuffle(deck);
 		
-//		Distribute the cards amongst the players hands
+		//Distribute the cards amongst the players hands
 		distribute(p1,p2,p3, deck);
 		sendHand(p1.hand, clientIP[0], ports[0]);
 		sendHand(p2.hand, clientIP[1], ports[1]);
@@ -422,7 +422,7 @@ public class CardGameServer extends CardGame{
 		scores[2] = new Card(p3.name, p3.score);
 		sendScoresToAll(scores);
 		
-		//We are testing so round is at 1 and not 17
+//		//We are testing so round is at 1 and not 17
 		while(round<=17) {
 			
 			System.out.println("Round " + round + ": ");
@@ -436,6 +436,8 @@ public class CardGameServer extends CardGame{
 				
 				//gets card and sends ack
 				fstCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				fstCard.setOrder(1);
+				fstCard.makeLead();
 				sendCardToAll(fstCard);
 				
 				//second player's turn
@@ -443,6 +445,7 @@ public class CardGameServer extends CardGame{
 				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
 				sendTurn("Your Turn", clientIP[1], ports[1]);
 				sndCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				sndCard.setOrder(2);
 				sendCardToAll(sndCard);
 				
 				//third player's turn
@@ -450,9 +453,10 @@ public class CardGameServer extends CardGame{
 				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn("Your Turn", clientIP[2], ports[2]);
 				thrdCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				thrdCard.setOrder(3);
 				sendCardToAll(thrdCard);
-				
-				//find winner
+//				
+//				//find winner
 				leadingCard = fstCard;
 				maxValue = fstCard.value;
 				
@@ -483,24 +487,28 @@ public class CardGameServer extends CardGame{
 				scores[1] = new Card(p2.name, p2.score);
 				scores[2] = new Card(p3.name, p3.score);
 				sendScoresToAll(scores);
-				
+//				
 			} else if(currentPlayer == p2){
 				sendTurn(players[1].name + "'s Turn", clientIP[0], ports[0]);
 				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
 				sendTurn("Your Turn", clientIP[1], ports[1]);
 				fstCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				fstCard.setOrder(1);
+				fstCard.makeLead();
 				sendCardToAll(fstCard);
 				
 				sendTurn(players[2].name + "'s Turn", clientIP[0], ports[0]);
 				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn("Your Turn", clientIP[2], ports[2]);
 				sndCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				sndCard.setOrder(2);
 				sendCardToAll(sndCard);
 				
 				sendTurn(players[0].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn(players[0].name + "'s Turn", clientIP[2], ports[2]);
 				sendTurn("Your Turn", clientIP[0], ports[0]);
 				thrdCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				thrdCard.setOrder(3);
 				sendCardToAll(thrdCard);
 
 //				These will be 
@@ -540,18 +548,22 @@ public class CardGameServer extends CardGame{
 				sendTurn(players[2].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn("Your Turn", clientIP[2], ports[2]);
 				fstCard = receiveCard("The card was send successfully", clientIP[2], ports[2]);
+				fstCard.setOrder(1);
+				fstCard.makeLead();
 				sendCardToAll(fstCard);
 				
 				sendTurn(players[0].name + "'s Turn", clientIP[1], ports[1]);
 				sendTurn(players[0].name + "'s Turn", clientIP[2], ports[2]);
 				sendTurn("Your Turn", clientIP[0], ports[0]);
 				sndCard = receiveCard("The card was send successfully", clientIP[0], ports[0]);
+				sndCard.setOrder(2);
 				sendCardToAll(sndCard);
 				
 				sendTurn(players[1].name + "'s Turn", clientIP[0], ports[0]);
 				sendTurn(players[1].name + "'s Turn", clientIP[2], ports[2]);
 				sendTurn("Your Turn", clientIP[1], ports[1]);
 				thrdCard =  receiveCard("The card was send successfully", clientIP[1], ports[1]);
+				thrdCard.setOrder(3);
 				sendCardToAll(thrdCard);
 
 				leadingCard = fstCard;
@@ -584,9 +596,9 @@ public class CardGameServer extends CardGame{
 				scores[2] = new Card(p3.name, p3.score);
 				sendScoresToAll(scores);
 			}
-			
+//			
 			round++;
 		}//end of loop
-//		checkForWin(p1,p2,p3);
+		sendStringToAll(checkForWin(p1,p2,p3));
 	}//end of online game
 }

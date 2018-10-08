@@ -13,6 +13,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 import javax.swing.JTextField;
 import javax.swing.text.DefaultCaret;
@@ -56,8 +57,13 @@ public class GameGui extends JFrame {
 		scrollPane.setViewportView(textAreaGame);
 		panelN.add(scrollPane);
 		
-//		listener = new CardButtonListener();
-//		listener.setGui(this);
+		//add labels to panelS
+		played1 = new JLabel();
+		panelS.add(played1);
+		played2 = new JLabel();
+		panelS.add(played2);
+		played3 = new JLabel();
+		panelS.add(played3);
 		
 		setVisible(true);
 	}
@@ -87,7 +93,7 @@ public class GameGui extends JFrame {
 			button.setIcon(image);
 			panelC.add(button);
 			buttons.add(button);
-			//button.setEnabled(false);
+			button.setEnabled(false);
 			button.setSize(90, 138);
 			button.setMinimumSize(getSize());
 		
@@ -100,18 +106,28 @@ public class GameGui extends JFrame {
 			//button.addActionListener(listener);
 			button.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					displayCard(myCard);
+					//displayCard(myCard);
 					button.setVisible(false);
-					
-					//this may cause issues. Keep an eye on it...
-					System.out.println(hand.get(0));
-					System.out.println(button.index);
-					p.play(button.index);
-					buttons.remove(button.index);
-					updateButtonsIndex();
-					disableAll();
-				}
-			});
+					try {
+						p.sendToServer(p.hand.get(button.index));
+						//this may cause issues. Keep an eye on it...
+						System.out.println(hand.get(0));
+						System.out.println(button.index);
+						
+						//ideally, we want to listen for ack before doing this
+						p.play(button.index);
+						buttons.remove(button.index);
+						updateButtonsIndex();
+						disableAll();
+					} catch (IndexOutOfBoundsException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}//end of catch
+				}//end of actionPerformed
+			});//end of inner class
 		}
 	}
 	
@@ -135,11 +151,48 @@ public class GameGui extends JFrame {
 		}
 	}
 	
+	//enables any card that is a leading suit. If they don't have a leading suit, enableAll()
+	public void enableSome(String suit) {
+		//hand and buttons should have the same length
+		boolean hasLead = false;
+		for ( int i = 0; i < buttons.size(); i++) {
+			if(p.hand.get(i).suit.equals(suit)) {
+				hasLead = true;
+				buttons.get(i).setEnabled(true);
+			}
+		}
+		//if no lead, enable all
+		if(!hasLead) {
+			enableAll();
+		}
+	}
+	
 	public void displayCard(Card c) {
-		JLabel JSP = new JLabel();
 		ImageIcon image = new ImageIcon(getClass().getResource("PNG/" + c.value + c.suit + ".png"));
-		JSP.setIcon(image);
-		panelS.add(JSP);
+		//order assures that the cards will not appear twice if the server accidentally sends the message twice
+		if(c.order == 1) {
+			played1.setIcon(image);
+		}
+		else if(c.order == 2) {
+			played2.setIcon(image);
+		}
+		else if(c.order == 3) {
+			played3.setIcon(image);
+		}
+		panelS.repaint();
+		panelS.revalidate();
+	}
+	
+	public void clearCards() {
+		panelS.removeAll();
+		played1 = new JLabel();
+		panelS.add(played1);
+		played2 = new JLabel();
+		panelS.add(played2);
+		played3 = new JLabel();
+		panelS.add(played3);
+		panelS.repaint();
+		panelS.revalidate();
 	}
 	
 	public void setTurn(String message) {
@@ -153,32 +206,30 @@ public class GameGui extends JFrame {
 		}
 	}
 	
-	public static void main(String[] args) throws InterruptedException {
-		// TODO Auto-generated method stub
-		GameGui GG = new GameGui();
-		NPSOrderedArrayList<Card> hand = new NPSOrderedArrayList<Card>();
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-		hand.add(new Card("S", 12));
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-		hand.add(new Card("S", 12));
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-		hand.add(new Card("S", 12));
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-		hand.add(new Card("S", 12));
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-		hand.add(new Card("S", 12));
-		hand.add(new Card("H", 2));
-		hand.add(new Card("D", 5));
-
-		
-		GG.CreateButtons(hand);
-		
-		
-	}
+//	public static void main(String[] args) throws InterruptedException {
+//		// TODO Auto-generated method stub
+//		GameGui GG = new GameGui();
+//		NPSOrderedArrayList<Card> hand = new NPSOrderedArrayList<Card>();
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//		hand.add(new Card("S", 12));
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//		hand.add(new Card("S", 12));
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//		hand.add(new Card("S", 12));
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//		hand.add(new Card("S", 12));
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//		hand.add(new Card("S", 12));
+//		hand.add(new Card("H", 2));
+//		hand.add(new Card("D", 5));
+//
+//		
+//		GG.CreateButtons(hand);
+//	}
 }
 
