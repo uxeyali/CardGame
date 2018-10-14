@@ -24,7 +24,7 @@ public class GameGui extends JFrame {
 	JPanel panelN = new JPanel();
 	JPanel panelS = new JPanel();
 	JPanel panelC = new JPanel();
-	NPSOrderedArrayList<CardButton> buttons = new NPSOrderedArrayList<CardButton>();
+	NPSOrderedArrayList<CardButton> buttons;
 	//for outputs
 	JTextArea textAreaGame;
 	JTextArea textAreaScores;
@@ -32,6 +32,9 @@ public class GameGui extends JFrame {
 	JLabel played1;
 	JLabel played2;
 	JLabel played3;
+	//for playAgain
+	JButton playAgainBtn;
+	JButton quitBtn;
 	//others
 	Player p;
 	//CardButtonListener listener;
@@ -84,8 +87,9 @@ public class GameGui extends JFrame {
 		textAreaScores.setText(message);
 	}
 	
-
+	//creates card buttons
 	public void CreateButtons( NPSOrderedArrayList<Card> hand) {
+		buttons = new NPSOrderedArrayList<CardButton>();
 		for ( int i = 0; i < hand.size(); i++) {
 			CardButton button = new CardButton(i);
 			ImageIcon image = new ImageIcon(getClass().getResource("PNG/" + hand.get(i).value + hand.get(i).suit + ".png"));
@@ -167,6 +171,7 @@ public class GameGui extends JFrame {
 		}
 	}
 	
+	//displays cards on panelS
 	public void displayCard(Card c) {
 		ImageIcon image = new ImageIcon(getClass().getResource("PNG/" + c.value + c.suit + ".png"));
 		//order assures that the cards will not appear twice if the server accidentally sends the message twice
@@ -183,6 +188,7 @@ public class GameGui extends JFrame {
 		panelS.revalidate();
 	}
 	
+	//clears panelS so new cards can be displayed
 	public void clearCards() {
 		panelS.removeAll();
 		played1 = new JLabel();
@@ -195,6 +201,50 @@ public class GameGui extends JFrame {
 		panelS.revalidate();
 	}
 	
+	//asks player if they want to play again
+	public void playAgain() {
+		playAgainBtn = new JButton("Play Again");
+		quitBtn = new JButton("Quit");
+		panelC.add(playAgainBtn);
+		panelC.add(quitBtn);
+		panelC.repaint();
+		panelC.revalidate();
+		//listeners
+		playAgainBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					p.sendToServer("Play Again");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				playAgainBtn.setEnabled(false);
+				quitBtn.setEnabled(false);
+				clearCenter();
+			}//end ActionPerformed
+		});//end ActionListener
+		quitBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					p.sendToServer("Quit");
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				playAgainBtn.setEnabled(false);
+				quitBtn.setEnabled(false);
+				clearCenter();
+			}//end ActionPerformed
+		});//end ActionListener
+	}
+	
+	public void clearCenter() {
+		panelC.removeAll();
+		panelC.repaint();
+		panelC.revalidate();
+	}
+	
+	//unused method
 	public void setTurn(String message) {
 		if(message.equals("Your Turn")) {
 			displayMessage("It's your turn, " + p.name);

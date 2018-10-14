@@ -22,6 +22,8 @@ public class CardGameServer extends CardGame{
 	int ports[] = new int[3];
 	int portCount = 0;
 	DatagramSocket receiveSocket; //needs to be global so it can close
+	//used for bind
+	boolean portFailed = true;
 	
 	public void listenAndAddClient() throws IOException{
 		byte[] buffer = new byte[1024];
@@ -29,18 +31,26 @@ public class CardGameServer extends CardGame{
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
-		clientIP[IPcount] = packet.getAddress();
-		IPcount++;
 		byte[] data = packet.getData();
 		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
 		ObjectInputStream objectStream = new ObjectInputStream(inputStream);
 		try {
 			PlayerData message = (PlayerData) objectStream.readObject();
-			//in the final program, we'll check if the object is a String and card
-			players[playerCount] = new Player(message.name);
-			playerCount++;
-			ports[portCount] = message.port;
-			portCount++;
+			//This is to ensure the port is not in use
+			int check = message.port;
+			if(check == ports[0] || check == ports[1] || check == ports[2]) {
+				portFailed = true;
+				System.out.println("Port in use");
+			}
+			else {
+				clientIP[IPcount] = packet.getAddress();
+				IPcount++;
+				players[playerCount] = new Player(message.name);
+				playerCount++;
+				ports[portCount] = message.port;
+				portCount++;
+				portFailed = false;
+			}
 			System.out.println(message.name + " " + message.port);
 		} catch (ClassNotFoundException e) {
 			System.out.println("Not correct object. Moving on...");
@@ -63,6 +73,33 @@ public class CardGameServer extends CardGame{
 		try {
 			String message = (String) objectStream.readObject();
 			System.out.println(message);
+		} catch (ClassNotFoundException e) {
+			System.out.println("Not correct object. Moving on...");
+		} catch(IOException e) {
+			System.out.println("Not correct object. Moving on...");
+		}
+		receiveSocket.close();
+	}
+	
+	public void listenForEnd() throws IOException{
+		byte[] buffer = new byte[1024];
+		receiveSocket = new DatagramSocket(receivePort);
+		System.out.println("Waiting...");
+		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+		receiveSocket.receive(packet);
+		byte[] data = packet.getData();
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+		ObjectInputStream objectStream = new ObjectInputStream(inputStream);
+		try {
+			String message = (String) objectStream.readObject();
+			System.out.println(message);
+			if(message.equals("Play Again")) {
+				sendStringToAll("New Game");
+				startOnlineGame();
+			}
+			else if(message.equals("Quit")) {
+				sendEndToAll();
+			}
 		} catch (ClassNotFoundException e) {
 			System.out.println("Not correct object. Moving on...");
 		} catch(IOException e) {
@@ -104,26 +141,35 @@ public class CardGameServer extends CardGame{
 		sendSocket.close();
 	}
 	
+	//************************Sending and Listening methods for specific things*************************
 	//connects three players
 	public void findPlayers() {
 		//fix port bind issue
 			for(int i = 0; i < 3; i++) {
-				try {
-					listenAndAddClient();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				try {
-					sendObjectTo(players[i].name + " connected", clientIP[i], ports[i]);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				portFailed = true;
+				//this makes sure the port is valid
+				while(portFailed) {
+					try {
+						listenAndAddClient();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					//if port did not fail, go forward
+					if(!portFailed) {
+						try {
+							sendObjectTo(players[i].name + " connected", clientIP[i], ports[i]);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}//end of while
 			}//end of loop
 		}
 	
 	public void startGame() {
 		for(int i = 0; i < 3; i++) {
 			boolean failed = true;
+			int count = 0;
 			while(failed) {
 				failed = false;
 				try {
@@ -136,12 +182,17 @@ public class CardGameServer extends CardGame{
 				} catch (SocketTimeoutException e) {
 					System.out.println("Timed out");
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				} catch (IOException e) {
 					e.printStackTrace();
 					failed = true;
+					count++;
 					receiveSocket.close();
+				}
+				if(count > 9) {
+					sendEndToAll();
 				}
 			}//end of while
 		}
@@ -150,6 +201,7 @@ public class CardGameServer extends CardGame{
 	//send hand to player
 	public void sendHand(NPSOrderedArrayList<Card> hand, InetAddress ip, int port) {
 		boolean failed = true;
+		int count = 0;
 		while(failed) {
 			failed = false;
 			try {
@@ -162,12 +214,17 @@ public class CardGameServer extends CardGame{
 			} catch (SocketTimeoutException e) {
 				System.out.println("Timed out");
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			} catch (IOException e) {
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
+			}
+			if(count > 9) {
+				sendEndToAll();
 			}
 		}
 	}
@@ -177,6 +234,7 @@ public class CardGameServer extends CardGame{
 		
 		for(int i = 0; i < 3; i++) {
 			boolean failed = true;
+			int count = 0;
 			while(failed) {
 				failed = false;
 				try {
@@ -189,19 +247,25 @@ public class CardGameServer extends CardGame{
 				} catch (SocketTimeoutException e) {
 					System.out.println("Timed out");
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				} catch (IOException e) {
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				}
-			}
+				if(count > 9) {
+					sendEndToAll();
+				}
+			}//end while
 		}
 	}
 	
 	public void sendString(String m, InetAddress ip, int port) {
 		boolean failed = true;
+		int count = 0;
 		while(failed) {
 			failed = false;
 			try {
@@ -214,12 +278,17 @@ public class CardGameServer extends CardGame{
 			} catch (SocketTimeoutException e) {
 				System.out.println("Timed out");
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			} catch (IOException e) {
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
+			}
+			if(count > 9) {
+				sendEndToAll();
 			}
 		}
 	}
@@ -227,6 +296,7 @@ public class CardGameServer extends CardGame{
 	//tell everyone who's turn it is
 	public void sendTurn(String m, InetAddress ip, int port) {
 		boolean failed = true;
+		int count = 0;
 		while(failed) {
 			failed = false;
 			try {
@@ -239,12 +309,17 @@ public class CardGameServer extends CardGame{
 			} catch (SocketTimeoutException e) {
 				System.out.println("Timed out");
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			} catch (IOException e) {
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
+			}
+			if(count > 9) {
+				sendEndToAll();
 			}
 		}
 	}
@@ -254,6 +329,7 @@ public class CardGameServer extends CardGame{
 		
 		for(int i = 0; i < 3; i++) {
 			boolean failed = true;
+			int count = 0;
 			while(failed) {
 				failed = false;
 				try {
@@ -266,19 +342,25 @@ public class CardGameServer extends CardGame{
 				} catch (SocketTimeoutException e) {
 					System.out.println("Timed out");
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				} catch (IOException e) {
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				}
-			}
+				if(count > 9) {
+					sendEndToAll();
+				}
+			}//end while
 		}
 	}
 	
 	public void sendCard(Card c, InetAddress ip, int port) {
 		boolean failed = true;
+		int count = 0;
 		while(failed) {
 			try {
 				sendObjectTo(c, ip, port);
@@ -290,12 +372,17 @@ public class CardGameServer extends CardGame{
 			} catch (SocketTimeoutException e) {
 				System.out.println("Timed out");
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			} catch (IOException e) {
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
+			}
+			if(count > 9) {
+				sendEndToAll();
 			}
 		}
 	}
@@ -304,6 +391,7 @@ public class CardGameServer extends CardGame{
 	public void sendScoresToAll(Card[] c) {
 		for(int i = 0; i < 3; i++) {
 			boolean failed = true;
+			int count = 0;
 			while(failed) {
 				failed = false;
 				try {
@@ -316,19 +404,25 @@ public class CardGameServer extends CardGame{
 				} catch (SocketTimeoutException e) {
 					System.out.println("Timed out");
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				} catch (IOException e) {
 					failed = true;
+					count++;
 					receiveSocket.close();
 					e.printStackTrace();
 				}
-			}
+				if(count > 9) {
+					sendEndToAll();
+				}
+			}//end while
 		}
 	}
 	
 	public void sendScores(Card[] c, InetAddress ip, int port) {
 		boolean failed = true;
+		int count = 0;
 		while(failed) {
 			failed = false;
 			try {
@@ -341,14 +435,19 @@ public class CardGameServer extends CardGame{
 			} catch (SocketTimeoutException e) {
 				System.out.println("Timed out");
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			} catch (IOException e) {
 				failed = true;
+				count++;
 				receiveSocket.close();
 				e.printStackTrace();
 			}
-		}
+			if(count > 9) {
+				sendEndToAll();
+			}
+		}//end while
 	}
 	
 	public Card receiveCard(String ack, InetAddress ip, int port) {
@@ -362,6 +461,52 @@ public class CardGameServer extends CardGame{
 		//maybe send an ack in the final program. Need threads to sleep and loop first
 
 		return received;
+	}
+	
+	public void askToEnd(InetAddress ip, int port) {
+		boolean failed = true;
+		int count = 0;
+		while(failed) {
+			failed = false;
+			try {
+				sendObjectTo("Play Again?", ip, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			try {
+				listenForAck();
+			} catch (SocketTimeoutException e) {
+				System.out.println("Timed out");
+				failed = true;
+				count++;
+				receiveSocket.close();
+				e.printStackTrace();
+			} catch (IOException e) {
+				failed = true;
+				count++;
+				receiveSocket.close();
+				e.printStackTrace();
+			}
+			if(count > 9) {
+				sendEndToAll();
+			}
+		}//end while
+		//wait for answer
+		try {
+			listenForEnd();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void sendEndToAll() {
+		for(int i = 0; i < 3; i++) {
+			try {
+				sendObjectTo("End Game", clientIP[i], ports[i]);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void sendAck(String ack, InetAddress ip, int port) {
@@ -387,7 +532,7 @@ public class CardGameServer extends CardGame{
 	}
 	
 	/* ************The Online Game Starts Here*********************** */
-	//not finished yet
+	//This starts the whole game
 	public void startOnlineGame() {
 		int round = 1;
 
@@ -416,6 +561,9 @@ public class CardGameServer extends CardGame{
 		int maxValue;
 		
 		//set scores to 0
+		p1.score = 0;
+		p2.score = 0;
+		p3.score = 0;
 		Card[] scores = new Card[3];
 		scores[0] = new Card(p1.name, p1.score);
 		scores[1] = new Card(p2.name, p2.score);
@@ -600,5 +748,7 @@ public class CardGameServer extends CardGame{
 			round++;
 		}//end of loop
 		sendStringToAll(checkForWin(p1,p2,p3));
+		//asks Player 1 if they want to end the game
+		askToEnd(clientIP[0], ports[0]);
 	}//end of online game
 }

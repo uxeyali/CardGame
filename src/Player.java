@@ -10,6 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
+//******************This contains communications for the Player to the Server and the Player's info*****************
 public class Player extends Thread{
 	NPSOrderedArrayList<Card> hand;
 	String name;
@@ -74,6 +75,7 @@ public class Player extends Thread{
 	Boolean mustPlayLead = false;
 	String leadingSuit;
 	DatagramSocket receiveSocket;
+	String lastMessage = "";
 	
 	//sending port 30480
 	//receiving port 5000-5002
@@ -95,6 +97,7 @@ public class Player extends Thread{
 	public void openGameGui() {
 		gameGui = new GameGui();
 		gameGui.setPlayer(this);
+		gameGui.setTitle("Card Game: " + name);
 		gui.Main.setVisible(false);
 	}
 	
@@ -109,6 +112,7 @@ public class Player extends Thread{
 		sendSocket.close();
 	}
 	
+	//***********Various Listen methods. Most are unused****************8
 	public void listenForServerStrings() throws IOException, BindException, ClassCastException{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
@@ -251,13 +255,14 @@ public class Player extends Thread{
 		receiveSocket.close();
 	}
 	
+	//most important method. Listens for anything the server sends it and interpreters it
 	boolean finished = true;
 	public void listenForAnything() throws IOException, BindException{
 		finished = false;
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
-		//gui.display("Waiting...");
-		gameGui.displayMessage("Waiting...");
+		gui.display("Waiting...");
+		//gameGui.displayMessage("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
@@ -275,13 +280,18 @@ public class Player extends Thread{
 			String message = (String) objectStream1.readObject();
 			//in the final program, we'll check if the object is a String, card, or hand
 			//compare strings to cause an effect
-			if(message.equals("Start Game")) {
+			if(message.equals(lastMessage)) {
+				System.out.println("Clone message");
+			}
+			else if(message.equals("Start Game")) {
 				//gui.gotoTestWindow();
+				lastMessage = message;
 				openGameGui();
 				gui.display("Game started. Waiting...");
 				gameGui.displayMessage("Game started. Waiting...");
 			}
 			else if(message.equals("Your Turn")) {
+				lastMessage = message;
 				gui.display("It's your turn, " + name);
 				//gui.btnPlay.setEnabled(true);
 				gameGui.displayMessage("It's your turn, " + name);
@@ -295,8 +305,31 @@ public class Player extends Thread{
 				}
 				myTurn = true;
 			}
-			else {
+			else if(message.equals("Play Again?")) {
+				lastMessage = message;
+				gameGui.displayMessage("Play again?");
+				gameGui.playAgain();
+			}
+			else if(message.equals("End Game")) {
+				lastMessage = message;
+				gameGui.displayMessage("The game is over.\nEnding...");
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.exit(0);
+			}
+			else if(message.equals("New Game")) {
+				lastMessage = message;
+				gameGui.textAreaGame.setText("New Game\n");
+			}
+			else if(gameGui == null) {
 				gui.display(message);
+				System.out.println(message);
+			}
+			else {
+				lastMessage = message;
 				gameGui.displayMessage(message);
 				System.out.println(message);
 			}
@@ -310,6 +343,7 @@ public class Player extends Thread{
 			NPSOrderedArrayList<Card> message = (NPSOrderedArrayList<Card>) objectStream2.readObject();
 			System.out.println("Got a hand " + message.get(0).value);
 			hand = message;
+			gameGui.CreateButtons(hand);
 			gui.display("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
 			gameGui.displayMessage("Cards have been delt. You got a Hand!\nYour First Card is " + hand.get(0).suit + hand.get(0).value);
 		}catch (ClassCastException e) {
@@ -353,7 +387,8 @@ public class Player extends Thread{
 			Card[] message = (Card[]) objectStream4.readObject();
 			System.out.println("Got a card array: " + message[0].suit + message[0].value);
 			gameGui.clearCards();
-			gameGui.setScores(message[0].suit + ": " + message[0].value + "\n" 
+			gameGui.setScores("Scores:\n"
+					+ message[0].suit + ": " + message[0].value + "\n" 
 					+ message[1].suit + ": " + message[1].value + "\n"
 					+ message[2].suit + ": " + message[2].value + "\n");
 		}catch (ClassCastException e) {
@@ -376,8 +411,9 @@ public class Player extends Thread{
 		try {
 			listenForServerStrings();
 			gui.btnConnect.setEnabled(false);
+			start();
 		} catch (BindException e) {
-			gui.display("This port number is already in use. Try another one");
+			gui.display("This port number is already in use by another player.\n Try another one");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -440,6 +476,7 @@ public class Player extends Thread{
 		}
 	}
 	
+	//unused
 	public void sendCard() {
 		gui.display("You played: " + hand.get(0).suit + hand.get(0).value);
 		gameGui.displayMessage("You played: " + hand.get(0).suit + hand.get(0).value);
@@ -549,13 +586,14 @@ public class Player extends Thread{
 		}
 	}
 	
+	//the players will listen infinitely for the Server's responses
 	public void run() {
-		connect();
+		//connect();
 		//start game
-		waitForStrings();
-		receiveHand();
-		//wait for scores
-		waitForScores();
+//		waitForStrings();
+//		receiveHand();
+//		//wait for scores
+//		waitForScores();
 		while(finished) {
 			waitForAnything();
 		}

@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
 import com.sun.glass.events.WindowEvent;
+import java.awt.Font;
 
 /* *****************This Class only exists to test the Networking***************** */
 public class TestGui extends JFrame{
@@ -26,9 +27,9 @@ public class TestGui extends JFrame{
 	private JTextField textFieldName;
 	private JTextField textFieldNameServer;
 	JTextField textFieldPort;
+	JLabel titleLbl;
 	JButton btnCreateServer;
 	JButton btnJoinServer;
-	JButton btnLocalGame;
 	JButton btnConnect;
 	JButton btnPlay;
 	String playerName;
@@ -36,6 +37,8 @@ public class TestGui extends JFrame{
 	JTextField enterTxt;
 	Player p;
 	JTextArea textAreaScores;
+	//server
+	CardGameServer s;
 	
 	public TestGui() {
 		this.gotoMain();
@@ -52,7 +55,13 @@ public class TestGui extends JFrame{
 		Main.getContentPane().add(panel);
 		panel.setLayout(null);
 		
-		btnCreateServer = new JButton("Create Server");
+		titleLbl = new JLabel("Card Game");
+		titleLbl.setHorizontalAlignment(SwingConstants.CENTER);
+		titleLbl.setFont(new Font("Arial Black", Font.PLAIN, 18));
+		titleLbl.setBounds(38, 11, 126, 23);
+		panel.add(titleLbl);
+		
+		btnCreateServer = new JButton("Create Game");
 		btnCreateServer.setBounds(38, 44, 126, 23);
 		panel.add(btnCreateServer);
 		btnCreateServer.addActionListener(new ActionListener() {
@@ -61,7 +70,7 @@ public class TestGui extends JFrame{
 			}
 		});
 		
-		btnJoinServer = new JButton("Join Server");
+		btnJoinServer = new JButton("Join Game");
 		btnJoinServer.setBounds(38, 78, 126, 23);
 		btnJoinServer.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
@@ -69,21 +78,7 @@ public class TestGui extends JFrame{
 			}
 		});
 		panel.add(btnJoinServer);
-		
-		btnLocalGame = new JButton("Local Game");
-		btnLocalGame.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				makeLocalGame();
-			}
-		});
-		btnLocalGame.setBounds(38, 11, 126, 23);
-		panel.add(btnLocalGame);
 		Main.repaint();
-	}
-	
-	public void makeLocalGame() {
-		CardGame CG = new CardGame();
-		CG.startLocalGame();
 	}
 	
 	void gotoTestWindow() {
@@ -167,8 +162,16 @@ public class TestGui extends JFrame{
 		lblNameServer.setBounds(0, 55, 46, 14);
 		ServerPanel.add(lblNameServer);
 		
+		textFieldPort = new JTextField("50000");
+		textFieldPort.setBounds(100, 70, 100, 23);
+		ServerPanel.add(textFieldPort);
+		textFieldPort.setColumns(10);
+		JLabel lblPort = new JLabel("Port Number:");
+		lblPort.setBounds(100, 55, 90, 14);
+		ServerPanel.add(lblPort);
+		
 		btnConnect = new JButton("Connect");
-		btnConnect.setBounds(102, 70, 85, 23);
+		btnConnect.setBounds(102, 30, 85, 23);
 		ServerPanel.add(btnConnect);
 		
 		JScrollPane scrollPane = new JScrollPane();
@@ -183,7 +186,7 @@ public class TestGui extends JFrame{
 		//connects to a server
 		btnConnect.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				makeServer();
+				//makeServer();
 				makeServerClient();
 			}
 		});
@@ -263,7 +266,7 @@ public class TestGui extends JFrame{
 	//starts server object
 	void makeServer() {
 		//Starts server
-		CardGameServer s = new CardGameServer();
+		s = new CardGameServer();
 		s.start();
 	}
 	
@@ -271,27 +274,42 @@ public class TestGui extends JFrame{
 	void makeServerClient() {
 		//makeServer();
 		playerName = textFieldNameServer.getText();
-		try {
-			//player1 is port 5000
-			p = new Player(playerName, this, InetAddress.getLocalHost(), 5000);
-			p.start();
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		//checks if the port is in use
+		int compare = Integer.parseInt(textFieldPort.getText());
+		if(compare == 30480) {
+			display("This port is used by the Server.\nEnter another Port Number");
+		}
+		else {
+			makeServer();
+			try {
+				p = new Player(playerName, this, InetAddress.getLocalHost(), compare);
+				//p.start();
+				p.connect();
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	//starts on client through joining
 	void makeClient() {
 		playerName = textFieldName.getText();
-		try {
-			serverIP = InetAddress.getByName(enterTxt.getText());
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		int compare = Integer.parseInt(textFieldPort.getText());
+		if(compare == 30480) {
+			display("This port is used by the Server.\nEnter another Port Number");
 		}
-		p = new Player(playerName, this, serverIP, Integer.parseInt(textFieldPort.getText()));
-		p.start();
+		else {
+			try {
+				serverIP = InetAddress.getByName(enterTxt.getText());
+			} catch (UnknownHostException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			p = new Player(playerName, this, serverIP, compare);
+			//p.start();
+			p.connect();
+		}
 	}
 	
 	void openGameGui() {

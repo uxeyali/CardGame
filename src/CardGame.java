@@ -5,6 +5,9 @@ public class CardGame extends Thread{
 		
 //		Distributing the deck into hands for each player
 //		Distributes 51 cards into 3 hands
+		p1.hand.clear();
+		p2.hand.clear();
+		p3.hand.clear();
 		for(int i =0; i<=50;i++) {
 			
 //			Each player gets one card each.
