@@ -9,6 +9,7 @@ import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 //******************This contains communications for the Player to the Server and the Player's info*****************
 public class Player extends Thread{
@@ -113,9 +114,11 @@ public class Player extends Thread{
 	}
 	
 	//***********Various Listen methods. Most are unused****************8
-	public void listenForServerStrings() throws IOException, BindException, ClassCastException{
+	public void listenForServerStrings() throws IOException, BindException, ClassCastException, SocketTimeoutException{
 		byte[] buffer = new byte[1024];
 		receiveSocket = new DatagramSocket(receivePort);
+		//so the connection fails if the server has not started
+		receiveSocket.setSoTimeout(3000);
 		gui.display("Waiting...");
 		System.out.println("Waiting...");
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -412,8 +415,12 @@ public class Player extends Thread{
 			listenForServerStrings();
 			gui.btnConnect.setEnabled(false);
 			start();
+		} catch (SocketTimeoutException e) {
+			System.out.println("Timed out");
+			gui.display("Could not find server\nMake sure another player created a game first");
+			receiveSocket.close();
 		} catch (BindException e) {
-			gui.display("This port number is already in use by another player.\n Try another one");
+			gui.display("This port number is already in use by another player.\nTry another one");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
