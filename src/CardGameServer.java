@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.StreamCorruptedException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -24,6 +25,9 @@ public class CardGameServer extends CardGame{
 	DatagramSocket receiveSocket; //needs to be global so it can close
 	//used for bind
 	boolean portFailed = true;
+	//used if player sends card before Ack is received
+	Card badCard;
+	boolean hasBadCard = false;
 	
 	public void listenAndAddClient() throws IOException{
 		byte[] buffer = new byte[1024];
@@ -68,12 +72,34 @@ public class CardGameServer extends CardGame{
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		receiveSocket.receive(packet);
 		byte[] data = packet.getData();
-		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-		ObjectInputStream objectStream = new ObjectInputStream(inputStream);
+		ByteArrayInputStream inputStream1 = new ByteArrayInputStream(data);
+		ObjectInputStream objectStream1 = new ObjectInputStream(inputStream1);
+		//used if it gets a bad card
+		ByteArrayInputStream inputStream2 = new ByteArrayInputStream(data);
+		ObjectInputStream objectStream2 = new ObjectInputStream(inputStream2);
 		try {
-			String message = (String) objectStream.readObject();
+			String message = (String) objectStream1.readObject();
 			System.out.println(message);
+		} catch (ClassCastException e) {
+			System.out.println("Not correct object. Moving on...");
 		} catch (ClassNotFoundException e) {
+			System.out.println("Not correct object. Moving on...");
+		} catch (StreamCorruptedException e) {
+			System.out.println("Not correct object. Moving on...");
+		} catch(IOException e) {
+			System.out.println("Not correct object. Moving on...");
+		}
+		//listen for a badCard
+		try {
+			Card message = (Card) objectStream2.readObject();
+			badCard = message;
+			hasBadCard = true;
+			System.out.println("Bad Card received: " + message.suit + message.value);
+		} catch (ClassCastException e) {
+			System.out.println("Not correct object. Moving on...");
+		} catch (ClassNotFoundException e) {
+			System.out.println("Not correct object. Moving on...");
+		} catch (StreamCorruptedException e) {
 			System.out.println("Not correct object. Moving on...");
 		} catch(IOException e) {
 			System.out.println("Not correct object. Moving on...");
@@ -109,24 +135,31 @@ public class CardGameServer extends CardGame{
 	}
 	
 	public Card listenForClientsCard() throws IOException{
-		byte[] buffer = new byte[1024];
-		receiveSocket = new DatagramSocket(receivePort);
-		System.out.println("Waiting...");
-		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-		receiveSocket.receive(packet);
-		byte[] data = packet.getData();
-		ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-		ObjectInputStream objectStream = new ObjectInputStream(inputStream);
 		Card message = null;
-		try {
-			message = (Card) objectStream.readObject();
-			System.out.println("Card received: " + message.suit + message.value);
-		} catch (ClassNotFoundException e) {
-			System.out.println("Not correct object. Moving on...");
-		} catch(IOException e) {
-			System.out.println("Not correct object. Moving on...");
+		//if received a bad card, use that instead
+		if(hasBadCard) {
+			message = badCard;
+			hasBadCard = false;
 		}
-		receiveSocket.close();
+		else {
+			byte[] buffer = new byte[1024];
+			receiveSocket = new DatagramSocket(receivePort);
+			System.out.println("Waiting...");
+			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+			receiveSocket.receive(packet);
+			byte[] data = packet.getData();
+			ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
+			ObjectInputStream objectStream = new ObjectInputStream(inputStream);
+			try {
+				message = (Card) objectStream.readObject();
+				System.out.println("Card received: " + message.suit + message.value);
+			} catch (ClassNotFoundException e) {
+				System.out.println("Not correct object. Moving on...");
+			} catch(IOException e) {
+				System.out.println("Not correct object. Moving on...");
+			}
+			receiveSocket.close();
+		}
 		return message;
 	}
 	
@@ -559,8 +592,12 @@ public class CardGameServer extends CardGame{
 		Card sndCard = new Card();
 		Card thrdCard = new Card();
 		int maxValue;
+		Card highestCard;
 		
 		//set scores to 0
+		p1.sum = 0;
+		p2.sum = 0;
+		p3.sum = 0;
 		p1.score = 0;
 		p2.score = 0;
 		p3.score = 0;
@@ -607,22 +644,37 @@ public class CardGameServer extends CardGame{
 //				//find winner
 				leadingCard = fstCard;
 				maxValue = fstCard.value;
+				highestCard = fstCard;
 				
+				//check if a higher card was played
 				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
 					maxValue=sndCard.value;
+					highestCard = sndCard;
+				} 
+				if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					maxValue=thrdCard.value;
+					highestCard = thrdCard;
+				}
+				if(fstCard.suit.equals(leadingCard.suit) && fstCard.value >= maxValue){
+					maxValue=fstCard.value;
+					highestCard = fstCard;
+				}
+				//check won one the round
+				if(sndCard == highestCard) {
 					currentPlayer = p2;
 					p2.score++;
 					p2.sum += sndCard.value;
 					sendStringToAll(p2.name + " wins Round " + round);
 					System.out.println(p2.name + " wins Round " + round);
-				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
-					maxValue=thrdCard.value;
+				}
+				else if(thrdCard == highestCard) {
 					currentPlayer=p3;
 					p3.score++;
 					p3.sum += thrdCard.value;
 					sendStringToAll(p3.name + " wins Round " + round);
 					System.out.println(p3.name + " wins Round " + round);
-				} else {
+				}
+				else if(fstCard == highestCard) {
 					p1.score++;
 					p1.sum += fstCard.value;
 					sendStringToAll(p1.name + " wins Round " + round);
@@ -662,23 +714,37 @@ public class CardGameServer extends CardGame{
 //				These will be 
 				leadingCard = fstCard;
 				maxValue = fstCard.value;
+				highestCard = fstCard;
 				
+				//check if a higher card was played
 				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
 					maxValue=sndCard.value;
+					highestCard = sndCard;
+				} 
+				if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					maxValue=thrdCard.value;
+					highestCard = thrdCard;
+				}
+				if(fstCard.suit.equals(leadingCard.suit) && fstCard.value >= maxValue){
+					maxValue=fstCard.value;
+					highestCard = fstCard;
+				}
+				//check won one the round
+				if(sndCard == highestCard) {
 					currentPlayer = p3;
 					p3.score++;
 					p3.sum += sndCard.value;
 					sendStringToAll(p3.name + " wins Round " + round);
 					System.out.println(p3.name + " wins Round " + round);
-				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
-					System.out.println("Max Value is: "+maxValue +"  "+ thrdCard.value);
-					maxValue=thrdCard.value;
+				}
+				else if(thrdCard == highestCard) {
 					currentPlayer=p1;
 					p1.score++;
 					p1.sum += thrdCard.value;
 					sendStringToAll(p1.name + " wins Round " + round);
 					System.out.println(p1.name + " wins Round " + round);
-				} else {
+				}
+				else if(fstCard == highestCard) {
 					p2.score++;
 					p2.sum += fstCard.value;
 					sendStringToAll(p2.name + " wins Round " + round);
@@ -716,22 +782,37 @@ public class CardGameServer extends CardGame{
 
 				leadingCard = fstCard;
 				maxValue = fstCard.value;
+				highestCard = fstCard;
 				
+				//check if a higher card was played
 				if(sndCard.suit.equals(leadingCard.suit) && sndCard.value > maxValue) {
 					maxValue=sndCard.value;
+					highestCard = sndCard;
+				} 
+				if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
+					maxValue=thrdCard.value;
+					highestCard = thrdCard;
+				}
+				if(fstCard.suit.equals(leadingCard.suit) && fstCard.value >= maxValue){
+					maxValue=fstCard.value;
+					highestCard = fstCard;
+				}
+				//check won one the round
+				if(sndCard == highestCard) {
 					currentPlayer = p1;
 					p1.score++;
 					p1.sum += sndCard.value;
 					sendStringToAll(p1.name + " wins Round " + round);
 					System.out.println(p1.name + " wins Round " + round);
-				} else if(thrdCard.suit.equals(leadingCard.suit) && thrdCard.value > maxValue) {
-					maxValue=thrdCard.value;
+				}
+				else if(thrdCard == highestCard) {
 					currentPlayer=p2;
 					p2.score++;
 					p2.sum += thrdCard.value;
 					sendStringToAll(p2.name + " wins Round " + round);
 					System.out.println(p2.name + " wins Round " + round);
-				} else {
+				}
+				else if(fstCard == highestCard) {
 					p3.score++;
 					p3.sum += fstCard.value;
 					sendStringToAll(p3.name + " wins Round " + round);

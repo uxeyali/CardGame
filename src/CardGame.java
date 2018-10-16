@@ -25,43 +25,44 @@ public class CardGame extends Thread{
 	public String checkForWin(Player p1, Player p2, Player p3) {
 		String message = "";
 		if(p1.score >= p2.score) {
-			if(p1.score > p3.score) {
+			if(p1.score == p2.score) {
+				message += (p1.name + " and " +p2.name +" are tied!");
+				if(p1.sum > p2.sum) {
+					message += ("\nHowever, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
+				}
+				else if(p1.sum == p2.sum) {
+					message += ("\nBoth " + p1.name + " and " + p2.name + "'s winning cards have same value, so they both tie.");
+				}
+				else {
+					message += ("\nHowever, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
+				}
+			} else if(p2.score == p3.score) {
+				message += (p2.name + " and " +p3.name +" are tied!");
+				if(p2.sum > p3.sum) {
+					message += ("\nHowever, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
+				}
+				else if(p2.sum == p3.sum) {
+					message += ("\nBoth " + p2.name + " and " + p3.name + "'s winning cards have same value, so they both tie.");
+				}
+				else {
+					message += ("\nHowever, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
+				}
+			} else if(p3.score == p1.score) {
+				message += (p3.name + " and " +p1.name +" are tied!");
+				if(p3.sum > p1.sum) {
+					message = ("\nHowever, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
+				}
+				else if(p3.sum == p1.sum) {
+					message = ("\nBoth " + p3.name + " and " + p1.name + "'s winning cards have same value, so they both tie.");
+				}
+				else {
+					message = ("\nHowever, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
+				}
+			}
+			else if(p1.score > p3.score) {
 				message = p1.name + " is the winner!";
 			} else if(p1.score < p3.score) {
 				message = (p3.name + " is the winner!");
-			} else if(p1.score == p2.score) {
-				message = (p1.name + " and " +p2.name +" are tied!");
-				if(p1.sum > p2.sum) {
-					message = ("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
-				}
-				else if(p1.sum == p2.sum) {
-					message = ("Both " + p1.name + " and " + p2.name + "'s winning cards have same value, so they both tie.");
-				}
-				else {
-					message = ("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
-				}
-			} else if(p2.score == p3.score) {
-				message = (p2.name + " and " +p3.name +" are tied!");
-				if(p2.sum > p3.sum) {
-					message = ("However, " + p2.name + "'s winning cards had the highest sum of values.\n" + p2.name + "Wins!");
-				}
-				else if(p2.sum == p3.sum) {
-					message = ("Both " + p2.name + " and " + p3.name + "'s winning cards have same value, so they both tie.");
-				}
-				else {
-					message = ("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
-				}
-			} else if(p3.score == p1.score) {
-				message = (p3.name + " and " +p1.name +" are tied!");
-				if(p3.sum > p1.sum) {
-					message = ("However, " + p3.name + "'s winning cards had the highest sum of values.\n" + p3.name + "Wins!");
-				}
-				else if(p3.sum == p1.sum) {
-					message = ("Both " + p3.name + " and " + p1.name + "'s winning cards have same value, so they both tie.");
-				}
-				else {
-					message = ("However, " + p1.name + "'s winning cards had the highest sum of values.\n" + p1.name + "Wins!");
-				}
 			}
 		} else if(p1.score < p2.score) {
 			if(p2.score > p3.score) {
